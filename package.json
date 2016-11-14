@@ -1,0 +1,32 @@
+{
+  "name": "live-coder",
+  "version": "1.0.0",
+  "description": "live coding simulation",
+  "main": "src/index.ts",
+  "scripts": {
+    "postinstall": "typings install",
+    "build": "webpack",
+    "start": "live-server",
+    "prestart": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jscriptcoder/live-coder.git"
+  },
+  "author": "Francisco Ramos <jscriptcoder@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jscriptcoder/live-coder/issues"
+  },
+  "homepage": "https://github.com/jscriptcoder/live-coder#readme",
+  "devDependencies": {
+    "live-server": "^1.1.0",
+    "ts-loader": "^1.2.0",
+    "typescript": "^2.0.9",
+    "typings": "^2.0.0",
+    "webpack": "^1.13.3"
+  },
+  "dependencies": {
+    "es6-shim": "^0.35.1"
+  }
+}
