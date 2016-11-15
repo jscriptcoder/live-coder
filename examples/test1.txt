@@ -1,30 +1,31 @@
---- js
+--- js ---
 var message = 'Hello World!!';
 var span = document.createElement('span');
 document.body.appendChild(span);
 span.innerHTML = message;
---- apply
+--- apply ---
 
---- css:apply
+--- css:apply ---
 body { background-color: blue; }
 span {
 	color: white;
 	font-weight: bold;
 }
 
---- html:div.test:apply
+--- html:div.test:apply ---
 <h3>Testing</h3>
 <label>Something:</label>
 <input type="text" value="yep">
 
---- html:div.test
+--- html:div.test ---
 <h2>Testing2</h2>
 <strong>Wow!!</strong>
---- apply
+--- apply ---
 
 --- html:div#tooltip
 <div title="tooltip">Hover over</div>
---- apply
+--- apply ---
 
---- html:div.test:apply
+--- html:div.test:apply ---
+<br />
 Still here

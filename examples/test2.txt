@@ -1,0 +1,40 @@
+--- js ---
+// alright, I'm gonna do an async operation
+// and we're gonna wait until it's document
+var timeoutPromise = new Promise(function (resolve) {
+	setTimeout(function () {
+		resolve();
+	}, 10000);
+});
+--- apply ---
+
+// we're gonna wait here timeoutPromise
+--- promise:timeoutPromise ---
+
+--- css:apply ---
+/* ...and continue here styling */
+body {
+	background-color: red;
+	color: white;
+}
+
+--- js ---
+// let's make another async operation
+var usersUrl = 'https://jsonplaceholder.typicode.com/users';
+var usersPromise = fetch(usersUrl).then(function (response) {
+	return response.json();
+});
+--- apply ---
+
+--- html:apply ---
+<!-- we're gonna display the json here --> 
+<textarea id="users-json"></textarea>
+
+--- promise:usersPromise ---
+
+--- js ---
+usersPromise.then(function (jsonUsers) {
+	console.log(jsonUsers)
+	document.getElementById('users-json').value = JSON.stringify(jsonUsers);
+});
+--- apply ---

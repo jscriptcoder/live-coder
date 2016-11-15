@@ -1,6 +1,8 @@
 import Deferred from './deferred';
 
-export function asyncLoop(fn: {(): Promise<any>}, condition: {(): boolean}, delay?: number): Promise<any> {
+export type EmptyPromise = Promise<undefined>;
+
+export function asyncLoop(fn: {(): EmptyPromise}, condition: {(): boolean}, delay?: number): EmptyPromise {
   const deferred = new Deferred<any>();
 
   const loop = (): void => {
@@ -24,7 +26,7 @@ export function asyncLoop(fn: {(): Promise<any>}, condition: {(): boolean}, dela
   return deferred.promise;
 }
 
-export function asyncForOf<T>(fn: {(value: T): Promise<any>}, array: T[], delay?: number): Promise<any> {
+export function asyncForOf<T>(fn: {(value: T): EmptyPromise}, array: T[], delay?: number): EmptyPromise {
   let index: number = 0;
   const length: number = array.length;
   let value: any;

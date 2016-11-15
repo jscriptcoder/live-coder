@@ -77,6 +77,10 @@ var Live =
 	        if (type === void 0) { type = 'text/javascript'; }
 	        return this.createElement('script', { type: type });
 	    };
+	    LiveCoder.prototype.asyncLineBreak = function () {
+	        this.$display.textContent += '\n';
+	        return Promise.resolve();
+	    };
 	    LiveCoder.prototype.updateDisplayScroll = function () { };
 	    LiveCoder.prototype.run = function (code) {
 	        var _this = this;
@@ -87,15 +91,17 @@ var Live =
 	        var $script;
 	        return utils_1.asyncForOf(function (line) {
 	            var forOfPromise;
+	            var extPromise = Promise.resolve();
+	            var chars = line.split('');
 	            var match = line.match(LiveCoder.DIR_RE);
 	            if (match) {
-	                var _a = match[1].split(':').map(function (word) { return word.toLowerCase(); }), section = _a[0], rest = _a.slice(1);
-	                switch (section) {
+	                var _a = match[1].split(':'), section = _a[0], rest = _a.slice(1);
+	                switch (section.toLowerCase()) {
 	                    case 'css':
 	                        $element = null;
 	                        $script = null;
 	                        $style = _this.createStyle();
-	                        if (rest[0] && rest[0] === 'apply') {
+	                        if (rest[0] && rest[0].toLowerCase() === 'apply') {
 	                            _this.$body.appendChild($style);
 	                        }
 	                        break;
@@ -104,41 +110,39 @@ var Live =
 	                        $script = null;
 	                        if (rest[0]) {
 	                            var elem = rest[0], apply = rest[1];
-	                            // let's swap if the first is "apply" (must be always last)
-	                            if (elem === 'apply') {
-	                                _b = [apply, elem], elem = _b[0], apply = _b[1];
+	                            // let's swap if the first one is "apply" (must be always the last)
+	                            if (elem.toLowerCase() === 'apply') {
+	                                _b = [apply || 'div', elem], elem = _b[0], apply = _b[1];
 	                            }
-	                            if (elem) {
-	                                var selector = elem.match(LiveCoder.SEL_RE);
-	                                // valid selector?
-	                                if (selector) {
-	                                    $element = document.querySelector(elem);
-	                                    // does the element exist in the DOM?
-	                                    if (!$element) {
-	                                        var _c = [selector[1] || 'div', selector[3], selector[4]], tagName = _c[0], symbol = _c[1], name_1 = _c[2];
-	                                        $element = _this.createElement(tagName);
-	                                        if (symbol && name_1) {
-	                                            // I know, this is crappy. Only supports classes or ids
-	                                            // and not even combined. TODO: build something better
-	                                            switch (symbol) {
-	                                                case '.':
-	                                                    $element.className = name_1;
-	                                                    break;
-	                                                case '#':
-	                                                    $element.id = name_1;
-	                                                    break;
-	                                            }
-	                                        }
-	                                        if (apply && apply === 'apply') {
-	                                            _this.$body.appendChild($element);
+	                            var selector = elem.match(LiveCoder.SEL_RE);
+	                            // valid selector?
+	                            if (selector) {
+	                                $element = document.querySelector(elem);
+	                                // does the element exist in the DOM?
+	                                if (!$element) {
+	                                    var _c = [selector[1] || 'div', selector[3], selector[4]], tagName = _c[0], symbol = _c[1], name_1 = _c[2];
+	                                    $element = _this.createElement(tagName);
+	                                    if (symbol && name_1) {
+	                                        // I know, this is crappy. Only supports classes or ids
+	                                        // and not even combined. TODO: build something better
+	                                        switch (symbol) {
+	                                            case '.':
+	                                                $element.className = name_1;
+	                                                break;
+	                                            case '#':
+	                                                $element.id = name_1;
+	                                                break;
 	                                        }
 	                                    }
-	                                }
-	                                else {
-	                                    $element = _this.createElement('div');
-	                                    if (apply && apply === 'apply') {
+	                                    if (apply && apply.toLowerCase() === 'apply') {
 	                                        _this.$body.appendChild($element);
 	                                    }
+	                                }
+	                            }
+	                            else {
+	                                $element = _this.createElement('div');
+	                                if (apply && apply.toLowerCase() === 'apply') {
+	                                    _this.$body.appendChild($element);
 	                                }
 	                            }
 	                        }
@@ -167,8 +171,14 @@ var Live =
 	                            $script = _this.createScript();
 	                        }
 	                        break;
+	                    case 'promise':
+	                        extPromise = Promise.resolve();
+	                        if (window[rest[0]] instanceof Promise) {
+	                            extPromise = window[rest[0]];
+	                        }
+	                        break;
 	                }
-	                forOfPromise = Promise.resolve();
+	                forOfPromise = extPromise;
 	            }
 	            else {
 	                forOfPromise = utils_1.asyncForOf(function (char) {
@@ -188,9 +198,15 @@ var Live =
 	                    else if ($script) {
 	                        $script.textContent += char;
 	                    }
-	                    return Promise.resolve();
-	                }, line.split(''), _this.config.typingSpeed).then(function () {
+	                    return extPromise;
+	                }, chars, _this.config.typingSpeed).then(function () {
 	                    _this.$display.textContent += '\n';
+	                    if ($style) {
+	                        $style.textContent += '\n';
+	                    }
+	                    else if ($script) {
+	                        $script.textContent += '\n';
+	                    }
 	                    return Promise.resolve();
 	                });
 	            }

@@ -1,4 +1,4 @@
-import { asyncForOf } from './utils';
+import { asyncForOf, EmptyPromise } from './utils';
 
 export interface LiveCoderConfig {
   typingSpeed?: number;
@@ -48,9 +48,14 @@ export default class LiveCoder {
     return this.createElement('script', { type });
   }
 
+  private asyncLineBreak(): EmptyPromise {
+    this.$display.textContent += '\n';
+    return Promise.resolve();
+  }
+
   private updateDisplayScroll(): void {}
 
-  public run(code: string = ''): Promise<any> {
+  public run(code: string = ''): EmptyPromise {
     const lines = code.trim().split('\n');
     
     let $style: HTMLElement;
@@ -59,14 +64,17 @@ export default class LiveCoder {
 
     return asyncForOf((line: string) => {
 
-      let forOfPromise: Promise<any>;
+      let forOfPromise: EmptyPromise;
+      let extPromise = Promise.resolve();
+
+      const chars = line.split('');
       const match = line.match(LiveCoder.DIR_RE);
     
       if (match) {
 
-        const [section, ...rest] = match[1].split(':').map(word => word.toLowerCase());
+        const [section, ...rest] = match[1].split(':');
 
-        switch (section) {
+        switch (section.toLowerCase()) {
             
           case 'css':
 
@@ -74,7 +82,7 @@ export default class LiveCoder {
             $script = null;
             $style = this.createStyle();
 
-            if (rest[0] && rest[0] === 'apply') {
+            if (rest[0] && rest[0].toLowerCase() === 'apply') {
               this.$body.appendChild($style);
             }
 
@@ -89,59 +97,57 @@ export default class LiveCoder {
               
               let [elem, apply] = rest;
 
-              // let's swap if the first is "apply" (must be always last)
-              if (elem === 'apply') {
-                [elem, apply] = [apply, elem];
+              // let's swap if the first one is "apply" (must be always the last)
+              if (elem.toLowerCase() === 'apply') {
+                [elem, apply] = [apply || 'div', elem];
               }
-              
-              if (elem) {
 
-                const selector = elem.match(LiveCoder.SEL_RE);
+              const selector = elem.match(LiveCoder.SEL_RE);
 
-                // valid selector?
-                if (selector) {
+              // valid selector?
+              if (selector) {
 
-                  $element = <HTMLElement>document.querySelector(elem);
-                  
-                  // does the element exist in the DOM?
-                  if (!$element) {
+                $element = <HTMLElement>document.querySelector(elem);
+                
+                // does the element exist in the DOM?
+                if (!$element) {
 
-                    const [
-                      tagName, 
-                      symbol, 
-                      name] = [selector[1] || 'div', selector[3], selector[4]];
+                  const [
+                    tagName, 
+                    symbol, 
+                    name] = [selector[1] || 'div', selector[3], selector[4]];
 
-                    $element = this.createElement(tagName);
+                  $element = this.createElement(tagName);
 
-                    if (symbol && name) {
+                  if (symbol && name) {
 
-                      // I know, this is crappy. Only supports classes or ids
-                      // and not even combined. TODO: build something better
-                      switch (symbol) {
-                        case '.':   
-                          $element.className = name;
-                          break;
-                        case '#':
-                          $element.id = name;
-                          break;
-                      }
-
+                    // I know, this is crappy. Only supports classes or ids
+                    // and not even combined. TODO: build something better
+                    switch (symbol) {
+                      case '.':   
+                        $element.className = name;
+                        break;
+                      case '#':
+                        $element.id = name;
+                        break;
                     }
-                    
-                    if (apply && apply === 'apply') {
-                      this.$body.appendChild($element);
-                    }
+
                   }
                   
-                } else {
-
-                  $element = this.createElement('div');
-                  if (apply && apply === 'apply') {
+                  if (apply && apply.toLowerCase() === 'apply') {
                     this.$body.appendChild($element);
                   }
+                }
+                
+              } else {
 
-                } 
-              }
+                $element = this.createElement('div');
+                if (apply && apply.toLowerCase() === 'apply') {
+                  this.$body.appendChild($element);
+                }
+
+              }              
+
             }
 
             $element = $element || this.createElement('div');
@@ -174,15 +180,40 @@ export default class LiveCoder {
             }
 
             break;
+
+          case 'promise':
+
+            extPromise = Promise.resolve();
+
+            if (window[rest[0]] instanceof Promise) {
+              extPromise = <Promise<any>>window[rest[0]];
+            }
+
+            break;
         }
         
-        forOfPromise = Promise.resolve();
-        
+        forOfPromise = extPromise;
+
+        /*
+        forOfPromise = asyncForOf((char: string) => {
+
+          this.$display.textContent += char;
+          return extPromise;
+
+        }, chars, this.config.typingSpeed).then(() => {
+
+          this.$display.textContent += '\n';
+          return Promise.resolve();
+
+        });
+        */
+
       } else {
         
         forOfPromise = asyncForOf((char: string) => {
 
           this.$display.textContent += char;
+
           if ($style) {
             $style.textContent += char;
           } else if ($element) {
@@ -199,11 +230,17 @@ export default class LiveCoder {
             $script.textContent += char;
           }
           
-          return Promise.resolve();
+          return extPromise;
 
-        }, line.split(''), this.config.typingSpeed).then(() => {
+        }, chars, this.config.typingSpeed).then(() => {
 
           this.$display.textContent += '\n';
+          if ($style) {
+            $style.textContent += '\n';
+          } else if ($script) {
+            $script.textContent += '\n';
+          }
+
           return Promise.resolve();
 
         });

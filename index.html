@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>..:: Live Coder ::..</title>
+	<title>..:: Live Codeîng ::..</title>
 </head>
 <body>
-	<script src="../dist/live-coder.js"></script>
+	<script src="dist/live-coder.js"></script>
 	<script>
-		fetch('example1.txt')
+		fetch('examples/test2.txt')
 			.then( response => response.text())
 			.then( code => {
 				
@@ -15,7 +15,6 @@
 				var liveCoder = new LiveCoder();
 
 				liveCoder.run(code);
-
 
 			});
 	</script>
