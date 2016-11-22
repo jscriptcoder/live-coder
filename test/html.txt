@@ -1,0 +1,35 @@
+--- html
+<h1>Hello</h1>
+<strong>Live coding!!</strong>
+--- apply
+
+<div>adding some stuff here</div>
+<p>... and something else</p>
+--- apply
+
+--- html:apply
+<h2>Same as previous one</h2>
+<span>... and more writing</span>
+
+--- html:div
+<h3>We're in a div</h3>
+<strong>doing some work</strong>
+--- apply
+
+<p>Paragraph here</p>
+<label>and label</label>
+--- apply
+
+--- html:section.one-section:apply
+<p>Writing some test here</p>
+
+--- html:article#the-article
+<span>Doing something in an article</span>
+<div>... block here</div>
+--- apply
+
+--- html:section.one-section
+<p>... and another test</p>
+
+--- html:article#the-article:apply
+<img src="https://www.google.ch/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png" width="100">

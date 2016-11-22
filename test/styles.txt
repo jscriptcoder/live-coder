@@ -1,0 +1,19 @@
+--- css:apply
+body:before {
+	content: "Hello, Body!!";
+	display: block;
+	color: red;
+	font-weight: bold;
+}
+
+--- css
+body {
+	background-color: blue;
+	font-size: 2em;
+}
+--- apply
+
+body {
+	font-style: italic;
+}
+--- apply

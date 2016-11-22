@@ -1,26 +1,39 @@
 import { asyncForOf, EmptyPromise } from './utils';
 
-export interface LiveCoderConfig {
+export interface CoderConfig {
+  displayClass?: string;
+  mainClass?: string;
   typingSpeed?: number;
 }
 
-export default class LiveCoder {
+export class Coder {
   
-  public static DIR_RE = /^\s*---\s*([a-z|\.|#|:]+)?/i;
-  public static SEL_RE = /([a-z]+)?((\.|#)([a-z]+))?/i;
+  public static DIR_RE = /^\s*---\s*([a-z|\-|_|\.|#|:]+)?/i;
+  public static SEL_RE = /^([a-z|\-|_]+)?((\.|#)([a-z|\-|_]+))?$/i;
+
+  public static domReady = (callback: EventListener) => {
+    document.addEventListener('DOMContentLoaded', callback);
+  };
   
-  private static DEFAULT_CONFIG: LiveCoderConfig = {
+  private static DEFAULT_CONFIG: CoderConfig = {
+    displayClass: 'live-coder__display',
+    mainClass: 'live-coder__main',
     typingSpeed: 50
   };
   
+  private $runner: HTMLElement;
+  private $main: HTMLElement;
   private $body: HTMLElement;
   private $display: HTMLElement;
-  private config: LiveCoderConfig;
+  private config: CoderConfig;
   
-  constructor(config: LiveCoderConfig = {}) {
+  constructor(config: CoderConfig = {}) {
+    this.config = Object.assign({}, Coder.DEFAULT_CONFIG, config);
+    this.$runner = document.getElementsByTagName('head')[0] || document.body;
+    this.$main = this.createElement('main', { className: this.config.mainClass});
     this.$body = document.body;
     this.$display = this.createDisplay();
-    this.config = Object.assign({}, LiveCoder.DEFAULT_CONFIG, config);
+    
   }
 
   private createElement(tagName: string, props: {[key: string]: any} = {}, $appendTo?: HTMLElement): HTMLElement {
@@ -37,7 +50,7 @@ export default class LiveCoder {
   }
 
   private createDisplay(): HTMLElement {
-    return this.createElement('pre', { className: 'live-coder__display' }, document.body);
+    return this.createElement('pre', { className: this.config.displayClass }, document.body);
   }
 
   private createStyle(type: string = 'text/css'): HTMLElement {
@@ -68,7 +81,7 @@ export default class LiveCoder {
       let extPromise = Promise.resolve();
 
       const chars = line.split('');
-      const match = line.match(LiveCoder.DIR_RE);
+      const match = line.match(Coder.DIR_RE);
     
       if (match) {
 
@@ -78,34 +91,60 @@ export default class LiveCoder {
             
           case 'css':
 
-            $element = null;
+            // --- css
+            // --- css:apply
+
             $script = null;
+            $element && ($element.dataset['innerHtml'] = '', $element = null);
+
             $style = this.createStyle();
 
             if (rest[0] && rest[0].toLowerCase() === 'apply') {
-              this.$body.appendChild($style);
+              this.$runner.appendChild($style);
             }
 
             break;
             
-          case 'html': // tricky one
+          case 'js': // --- js
 
             $style = null;
+            $element && ($element.dataset['innerHtml'] = '', $element = null);
+
+            $script = this.createScript();
+
+            // can't be apply at this point, only at the end,
+            // would throw exeptions
+
+            break;
+
+          case 'html': // tricky one o_O
+
+            // --- html ($main)
+            // --- html:apply ($main)
+            // --- html:tag
+            // --- html:tag.class
+            // --- html:.class (tag = div)
+            // --- html:tag#id
+            // --- html:#id (tag = div)
+            // --- html:tag:apply
+            // --- html:apply:tag
+
             $script = null;
+            $style = null;
 
             if (rest[0]) {
               
               let [elem, apply] = rest;
 
-              // let's swap if the first one is "apply" (must be always the last)
+              // let's swap if the first one is "apply"
               if (elem.toLowerCase() === 'apply') {
-                [elem, apply] = [apply || 'div', elem];
+                [elem, apply] = [apply || '', elem];
               }
 
-              const selector = elem.match(LiveCoder.SEL_RE);
+              const selector = elem.match(Coder.SEL_RE);
 
               // valid selector?
-              if (selector) {
+              if (elem && selector) {
 
                 $element = <HTMLElement>document.querySelector(elem);
                 
@@ -122,7 +161,7 @@ export default class LiveCoder {
                   if (symbol && name) {
 
                     // I know, this is crappy. Only supports classes or ids
-                    // and not even combined. TODO: build something better
+                    // and not even combined. TODO: make it better
                     switch (symbol) {
                       case '.':   
                         $element.className = name;
@@ -134,54 +173,58 @@ export default class LiveCoder {
 
                   }
                   
-                  if (apply && apply.toLowerCase() === 'apply') {
+                  if (apply && 
+                      apply.toLowerCase() === 'apply' && 
+                      !$element.parentElement) {
+
                     this.$body.appendChild($element);
+
                   }
                 }
                 
               } else {
 
-                $element = this.createElement('div');
-                if (apply && apply.toLowerCase() === 'apply') {
+                $element = this.$main;
+                if (apply && 
+                    apply.toLowerCase() === 'apply' && 
+                    !$element.parentElement) {
+
                   this.$body.appendChild($element);
+
                 }
 
               }              
 
             }
 
-            $element = $element || this.createElement('div');
+            $element = $element || this.$main;
 
             // in case there was already content
             // we can continue writing html in the element
             $element.dataset['innerHtml'] = $element.innerHTML;
             break;
-
-          case 'js':
-
-            $style = null;
-            $element = null;
-            $script = this.createScript();
-
-            break;
             
-          case 'apply':
+          case 'apply': // --- apply
 
             if ($style) {
-              this.$body.appendChild($style);
+
+              this.$runner.appendChild($style);
               $style = this.createStyle();
-            } else if ($element) {
-              $element.dataset['innerHtml'] = '';
+
+            } else if ($element && !$element.parentElement) {
+
               this.$body.appendChild($element);
-              $element = <HTMLElement>$element.cloneNode();
+
             } else if ($script) {
-              this.$body.appendChild($script);
+
+              this.$runner.appendChild($script);
               $script = this.createScript();
+
             }
 
             break;
 
-          case 'promise':
+          case 'promise': // --- promise:promiseVar
 
             extPromise = Promise.resolve();
 
@@ -192,9 +235,8 @@ export default class LiveCoder {
             break;
         }
         
-        forOfPromise = extPromise;
+        //forOfPromise = extPromise;
 
-        /*
         forOfPromise = asyncForOf((char: string) => {
 
           this.$display.textContent += char;
@@ -206,7 +248,6 @@ export default class LiveCoder {
           return Promise.resolve();
 
         });
-        */
 
       } else {
         
@@ -246,7 +287,7 @@ export default class LiveCoder {
         });
 
       }
-      
+
       return forOfPromise;
 
     }, lines).then(() => {

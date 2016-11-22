@@ -2,21 +2,22 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title>..:: Live Codeîng ::..</title>
-</head>
-<body>
+	<title>..:: Live Coding ::..</title>
+
 	<script src="dist/live-coder.js"></script>
 	<script>
-		fetch('examples/test2.txt')
-			.then( response => response.text())
-			.then( code => {
-				
-				var LiveCoder = Live.default;
-				var liveCoder = new LiveCoder();
-
-				liveCoder.run(code);
-
-			});
+		Live.Coder.domReady(function () {
+			//fetch('test/styles.txt')
+			//fetch('test/scripts.txt')
+			fetch('test/html.txt')
+				.then( response => response.text())
+				.then( code => {
+					var liveCoder = new Live.Coder();
+					liveCoder.run(code);
+				});
+		});
 	</script>
-</body>
+	
+</head>
+<body></body>
 </html>

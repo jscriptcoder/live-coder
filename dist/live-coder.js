@@ -47,14 +47,16 @@ var Live =
 
 	"use strict";
 	var utils_1 = __webpack_require__(1);
-	var LiveCoder = (function () {
-	    function LiveCoder(config) {
+	var Coder = (function () {
+	    function Coder(config) {
 	        if (config === void 0) { config = {}; }
+	        this.config = Object.assign({}, Coder.DEFAULT_CONFIG, config);
+	        this.$runner = document.getElementsByTagName('head')[0] || document.body;
+	        this.$main = this.createElement('main', { className: this.config.mainClass });
 	        this.$body = document.body;
 	        this.$display = this.createDisplay();
-	        this.config = Object.assign({}, LiveCoder.DEFAULT_CONFIG, config);
 	    }
-	    LiveCoder.prototype.createElement = function (tagName, props, $appendTo) {
+	    Coder.prototype.createElement = function (tagName, props, $appendTo) {
 	        if (props === void 0) { props = {}; }
 	        var $elem = document.createElement(tagName);
 	        for (var _i = 0, _a = Object.keys(props); _i < _a.length; _i++) {
@@ -66,23 +68,23 @@ var Live =
 	        }
 	        return $elem;
 	    };
-	    LiveCoder.prototype.createDisplay = function () {
-	        return this.createElement('pre', { className: 'live-coder__display' }, document.body);
+	    Coder.prototype.createDisplay = function () {
+	        return this.createElement('pre', { className: this.config.displayClass }, document.body);
 	    };
-	    LiveCoder.prototype.createStyle = function (type) {
+	    Coder.prototype.createStyle = function (type) {
 	        if (type === void 0) { type = 'text/css'; }
 	        return this.createElement('style', { type: type });
 	    };
-	    LiveCoder.prototype.createScript = function (type) {
+	    Coder.prototype.createScript = function (type) {
 	        if (type === void 0) { type = 'text/javascript'; }
 	        return this.createElement('script', { type: type });
 	    };
-	    LiveCoder.prototype.asyncLineBreak = function () {
+	    Coder.prototype.asyncLineBreak = function () {
 	        this.$display.textContent += '\n';
 	        return Promise.resolve();
 	    };
-	    LiveCoder.prototype.updateDisplayScroll = function () { };
-	    LiveCoder.prototype.run = function (code) {
+	    Coder.prototype.updateDisplayScroll = function () { };
+	    Coder.prototype.run = function (code) {
 	        var _this = this;
 	        if (code === void 0) { code = ''; }
 	        var lines = code.trim().split('\n');
@@ -93,30 +95,48 @@ var Live =
 	            var forOfPromise;
 	            var extPromise = Promise.resolve();
 	            var chars = line.split('');
-	            var match = line.match(LiveCoder.DIR_RE);
+	            var match = line.match(Coder.DIR_RE);
 	            if (match) {
 	                var _a = match[1].split(':'), section = _a[0], rest = _a.slice(1);
 	                switch (section.toLowerCase()) {
 	                    case 'css':
-	                        $element = null;
+	                        // --- css
+	                        // --- css:apply
 	                        $script = null;
+	                        $element && ($element.dataset['innerHtml'] = '', $element = null);
 	                        $style = _this.createStyle();
 	                        if (rest[0] && rest[0].toLowerCase() === 'apply') {
-	                            _this.$body.appendChild($style);
+	                            _this.$runner.appendChild($style);
 	                        }
 	                        break;
-	                    case 'html':
+	                    case 'js':
 	                        $style = null;
+	                        $element && ($element.dataset['innerHtml'] = '', $element = null);
+	                        $script = _this.createScript();
+	                        // can't be apply at this point, only at the end,
+	                        // would throw exeptions
+	                        break;
+	                    case 'html':
+	                        // --- html ($main)
+	                        // --- html:apply ($main)
+	                        // --- html:tag
+	                        // --- html:tag.class
+	                        // --- html:.class (tag = div)
+	                        // --- html:tag#id
+	                        // --- html:#id (tag = div)
+	                        // --- html:tag:apply
+	                        // --- html:apply:tag
 	                        $script = null;
+	                        $style = null;
 	                        if (rest[0]) {
 	                            var elem = rest[0], apply = rest[1];
-	                            // let's swap if the first one is "apply" (must be always the last)
+	                            // let's swap if the first one is "apply"
 	                            if (elem.toLowerCase() === 'apply') {
-	                                _b = [apply || 'div', elem], elem = _b[0], apply = _b[1];
+	                                _b = [apply || '', elem], elem = _b[0], apply = _b[1];
 	                            }
-	                            var selector = elem.match(LiveCoder.SEL_RE);
+	                            var selector = elem.match(Coder.SEL_RE);
 	                            // valid selector?
-	                            if (selector) {
+	                            if (elem && selector) {
 	                                $element = document.querySelector(elem);
 	                                // does the element exist in the DOM?
 	                                if (!$element) {
@@ -124,7 +144,7 @@ var Live =
 	                                    $element = _this.createElement(tagName);
 	                                    if (symbol && name_1) {
 	                                        // I know, this is crappy. Only supports classes or ids
-	                                        // and not even combined. TODO: build something better
+	                                        // and not even combined. TODO: make it better
 	                                        switch (symbol) {
 	                                            case '.':
 	                                                $element.className = name_1;
@@ -134,40 +154,37 @@ var Live =
 	                                                break;
 	                                        }
 	                                    }
-	                                    if (apply && apply.toLowerCase() === 'apply') {
+	                                    if (apply &&
+	                                        apply.toLowerCase() === 'apply' &&
+	                                        !$element.parentElement) {
 	                                        _this.$body.appendChild($element);
 	                                    }
 	                                }
 	                            }
 	                            else {
-	                                $element = _this.createElement('div');
-	                                if (apply && apply.toLowerCase() === 'apply') {
+	                                $element = _this.$main;
+	                                if (apply &&
+	                                    apply.toLowerCase() === 'apply' &&
+	                                    !$element.parentElement) {
 	                                    _this.$body.appendChild($element);
 	                                }
 	                            }
 	                        }
-	                        $element = $element || _this.createElement('div');
+	                        $element = $element || _this.$main;
 	                        // in case there was already content
 	                        // we can continue writing html in the element
 	                        $element.dataset['innerHtml'] = $element.innerHTML;
 	                        break;
-	                    case 'js':
-	                        $style = null;
-	                        $element = null;
-	                        $script = _this.createScript();
-	                        break;
 	                    case 'apply':
 	                        if ($style) {
-	                            _this.$body.appendChild($style);
+	                            _this.$runner.appendChild($style);
 	                            $style = _this.createStyle();
 	                        }
-	                        else if ($element) {
-	                            $element.dataset['innerHtml'] = '';
+	                        else if ($element && !$element.parentElement) {
 	                            _this.$body.appendChild($element);
-	                            $element = $element.cloneNode();
 	                        }
 	                        else if ($script) {
-	                            _this.$body.appendChild($script);
+	                            _this.$runner.appendChild($script);
 	                            $script = _this.createScript();
 	                        }
 	                        break;
@@ -178,7 +195,14 @@ var Live =
 	                        }
 	                        break;
 	                }
-	                forOfPromise = extPromise;
+	                //forOfPromise = extPromise;
+	                forOfPromise = utils_1.asyncForOf(function (char) {
+	                    _this.$display.textContent += char;
+	                    return extPromise;
+	                }, chars, _this.config.typingSpeed).then(function () {
+	                    _this.$display.textContent += '\n';
+	                    return Promise.resolve();
+	                });
 	            }
 	            else {
 	                forOfPromise = utils_1.asyncForOf(function (char) {
@@ -222,15 +246,19 @@ var Live =
 	            return Promise.resolve();
 	        });
 	    };
-	    LiveCoder.DIR_RE = /^\s*---\s*([a-z|\.|#|:]+)?/i;
-	    LiveCoder.SEL_RE = /([a-z]+)?((\.|#)([a-z]+))?/i;
-	    LiveCoder.DEFAULT_CONFIG = {
+	    Coder.DIR_RE = /^\s*---\s*([a-z|\-|_|\.|#|:]+)?/i;
+	    Coder.SEL_RE = /^([a-z|\-|_]+)?((\.|#)([a-z|\-|_]+))?$/i;
+	    Coder.domReady = function (callback) {
+	        document.addEventListener('DOMContentLoaded', callback);
+	    };
+	    Coder.DEFAULT_CONFIG = {
+	        displayClass: 'live-coder__display',
+	        mainClass: 'live-coder__main',
 	        typingSpeed: 50
 	    };
-	    return LiveCoder;
+	    return Coder;
 	}());
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = LiveCoder;
+	exports.Coder = Coder;
 
 
 /***/ },
@@ -240,7 +268,7 @@ var Live =
 	"use strict";
 	var deferred_1 = __webpack_require__(2);
 	function asyncLoop(fn, condition, delay) {
-	    var deferred = new deferred_1.default();
+	    var deferred = new deferred_1.Deferred();
 	    var loop = function () {
 	        if (condition()) {
 	            fn()
@@ -293,8 +321,7 @@ var Live =
 	    }
 	    return Deferred;
 	}());
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.default = Deferred;
+	exports.Deferred = Deferred;
 
 
 /***/ }

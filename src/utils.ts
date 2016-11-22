@@ -1,4 +1,4 @@
-import Deferred from './deferred';
+import { Deferred } from './deferred';
 
 export type EmptyPromise = Promise<undefined>;
 
