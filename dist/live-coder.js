@@ -52,7 +52,7 @@ var Live =
 	        if (config === void 0) { config = {}; }
 	        this.config = Object.assign({}, Coder.DEFAULT_CONFIG, config);
 	        this.$runner = document.getElementsByTagName('head')[0] || document.body;
-	        this.$main = this.createElement('main', { className: this.config.mainClass });
+	        this.$wrapperElem = this.createElement(this.config.wrapperElement);
 	        this.$body = document.body;
 	        this.$display = this.createDisplay();
 	    }
@@ -128,6 +128,7 @@ var Live =
 	                        // --- html:apply:tag
 	                        $script = null;
 	                        $style = null;
+	                        $element && ($element.dataset['innerHtml'] = '');
 	                        if (rest[0]) {
 	                            var elem = rest[0], apply = rest[1];
 	                            // let's swap if the first one is "apply"
@@ -162,7 +163,7 @@ var Live =
 	                                }
 	                            }
 	                            else {
-	                                $element = _this.$main;
+	                                $element = _this.$wrapperElem;
 	                                if (apply &&
 	                                    apply.toLowerCase() === 'apply' &&
 	                                    !$element.parentElement) {
@@ -170,7 +171,7 @@ var Live =
 	                                }
 	                            }
 	                        }
-	                        $element = $element || _this.$main;
+	                        $element = $element || _this.$wrapperElem;
 	                        // in case there was already content
 	                        // we can continue writing html in the element
 	                        $element.dataset['innerHtml'] = $element.innerHTML;
@@ -253,7 +254,7 @@ var Live =
 	    };
 	    Coder.DEFAULT_CONFIG = {
 	        displayClass: 'live-coder__display',
-	        mainClass: 'live-coder__main',
+	        wrapperElement: 'body-inner',
 	        typingSpeed: 50
 	    };
 	    return Coder;
