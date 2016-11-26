@@ -24,6 +24,7 @@
     "ts-loader": "^1.2.0",
     "typescript": "^2.0.9",
     "typings": "^2.0.0",
+    "uglify-js": "^2.7.4",
     "webpack": "^1.13.3"
   },
   "dependencies": {
