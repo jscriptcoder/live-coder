@@ -8,8 +8,8 @@ export interface CoderConfig {
 
 export class Coder {
   
-  public static DIR_RE = /^\s*---\s*([a-z|\-|_|\.|#|:]+)?/i;
-  public static SEL_RE = /^([a-z|\-|_]+)?((\.|#)([a-z|\-|_]+))?$/i;
+  public static DIR_RE = /^\s*---\s*([a-z0-9|\-|_|\.|#|:]+)?/i;
+  public static SEL_RE = /^([a-z0-9|\-|_]+)?((\.|#)([a-z0-9|\-|_]+))?$/i;
 
   public static domReady = (callback: EventListener) => {
     document.addEventListener('DOMContentLoaded', callback);
@@ -17,7 +17,7 @@ export class Coder {
   
   private static DEFAULT_CONFIG: CoderConfig = {
     displayClass: 'live-coder__display',
-    wrapperElement: 'body-inner',
+    wrapperElement: 'wrapper-element',
     typingSpeed: 50
   };
   
@@ -61,11 +61,6 @@ export class Coder {
     return this.createElement('script', { type });
   }
 
-  private asyncLineBreak(): EmptyPromise {
-    this.$display.textContent += '\n';
-    return Promise.resolve();
-  }
-
   private updateDisplayScroll(): void {}
 
   public run(code: string = ''): EmptyPromise {
@@ -73,107 +68,135 @@ export class Coder {
     
     let $style: HTMLElement;
     let $element: HTMLElement;
+    let elemInnerHtml: string;
     let $script: HTMLElement;
 
     return asyncForOf((line: string) => {
 
       let forOfPromise: EmptyPromise;
-      let extPromise = Promise.resolve();
+      let returnPromise = Promise.resolve();
 
       const chars = line.split('');
       const match = line.match(Coder.DIR_RE);
     
       if (match) {
 
-        const [section, ...rest] = match[1].split(':');
+        forOfPromise = asyncForOf((char: string) => {
 
-        switch (section.toLowerCase()) {
-            
-          case 'css':
+          this.$display.textContent += char;
+          return returnPromise;
 
-            // --- css
-            // --- css:apply
+        }, chars, this.config.typingSpeed).then(() => {
 
-            $script = null;
-            $element && ($element.dataset['innerHtml'] = '', $element = null);
+          this.$display.textContent += '\n';
 
-            $style = this.createStyle();
+          const [section, ...rest] = match[1].split(':');
 
-            if (rest[0] && rest[0].toLowerCase() === 'apply') {
-              this.$runner.appendChild($style);
-            }
-
-            break;
-            
-          case 'js': // --- js
-
-            $style = null;
-            $element && ($element.dataset['innerHtml'] = '', $element = null);
-
-            $script = this.createScript();
-
-            // can't be apply at this point, only at the end,
-            // would throw exeptions
-
-            break;
-
-          case 'html': // tricky one o_O
-
-            // --- html ($main)
-            // --- html:apply ($main)
-            // --- html:tag
-            // --- html:tag.class
-            // --- html:.class (tag = div)
-            // --- html:tag#id
-            // --- html:#id (tag = div)
-            // --- html:tag:apply
-            // --- html:apply:tag
-
-            $script = null;
-            $style = null;
-            $element && ($element.dataset['innerHtml'] = '');
-
-            if (rest[0]) {
+          switch (section.toLowerCase()) {
               
-              let [elem, apply] = rest;
+            case 'css':
 
-              // let's swap if the first one is "apply"
-              if (elem.toLowerCase() === 'apply') {
-                [elem, apply] = [apply || '', elem];
+              // --- css
+              // --- css:apply
+
+              $script = null;
+              $element = null;
+              elemInnerHtml = '';
+
+              $style = this.createStyle();
+
+              if (rest[0] && rest[0].toLowerCase() === 'apply') {
+                this.$runner.appendChild($style);
               }
 
-              const selector = elem.match(Coder.SEL_RE);
+              break;
+              
 
-              // valid selector?
-              if (elem && selector) {
 
-                $element = <HTMLElement>document.querySelector(elem);
+            case 'js': // --- js
+
+              $style = null;
+              $element = null;
+              elemInnerHtml = '';
+
+              $script = this.createScript();
+
+              // can't be apply at this point, only at the end,
+              // would throw exeptions
+
+              break;
+
+
+
+            case 'html': // tricky one o_O
+
+              // --- html ($wrapperElem)
+              // --- html:apply ($wrapperElem)
+              // --- html:tag
+              // --- html:tag.class
+              // --- html:.class (tag = div)
+              // --- html:tag#id
+              // --- html:#id (tag = div)
+              // --- html:tag:apply
+              // --- html:apply:tag
+
+              $script = null;
+              $style = null;
+              elemInnerHtml = '';
+
+              if (rest[0]) {
                 
-                // does the element exist in the DOM?
-                if (!$element) {
+                let [elem, apply] = rest;
 
-                  const [
-                    tagName, 
-                    symbol, 
-                    name] = [selector[1] || 'div', selector[3], selector[4]];
+                // let's swap if the first one is "apply"
+                if (elem.toLowerCase() === 'apply') {
+                  [elem, apply] = [apply || '', elem];
+                }
 
-                  $element = this.createElement(tagName);
+                const selector = elem.match(Coder.SEL_RE);
 
-                  if (symbol && name) {
+                // valid selector?
+                if (elem && selector) {
 
-                    // I know, this is crappy. Only supports classes or ids
-                    // and not even combined. TODO: make it better
-                    switch (symbol) {
-                      case '.':   
-                        $element.className = name;
-                        break;
-                      case '#':
-                        $element.id = name;
-                        break;
+                  $element = <HTMLElement>document.querySelector(elem);
+                  
+                  // does the element exist in the DOM?
+                  if (!$element) {
+
+                    const [
+                      tagName, 
+                      symbol, 
+                      name] = [selector[1] || 'div', selector[3], selector[4]];
+
+                    $element = this.createElement(tagName);
+
+                    if (symbol && name) {
+
+                      // I know, this is crappy. Only supports classes or ids
+                      // and not even combined. TODO: make it better
+                      switch (symbol) {
+                        case '.':
+                          $element.className = name;
+                          break;
+                        case '#':
+                          $element.id = name;
+                          break;
+                      }
+
                     }
+                    
+                    if (apply && 
+                        apply.toLowerCase() === 'apply' && 
+                        !$element.parentElement) {
 
+                      this.$body.appendChild($element);
+
+                    }
                   }
                   
+                } else {
+
+                  $element = this.$wrapperElem;
                   if (apply && 
                       apply.toLowerCase() === 'apply' && 
                       !$element.parentElement) {
@@ -181,74 +204,55 @@ export class Coder {
                     this.$body.appendChild($element);
 
                   }
-                }
-                
-              } else {
 
-                $element = this.$wrapperElem;
-                if (apply && 
-                    apply.toLowerCase() === 'apply' && 
-                    !$element.parentElement) {
+                }              
 
-                  this.$body.appendChild($element);
+              }
 
-                }
+              $element = $element || this.$wrapperElem;
 
-              }              
+              // in case there was already content
+              // we can continue writing html in the element
+              elemInnerHtml = $element.innerHTML;
+              break;
+              
 
-            }
 
-            $element = $element || this.$wrapperElem;
+            case 'apply': // --- apply
 
-            // in case there was already content
-            // we can continue writing html in the element
-            $element.dataset['innerHtml'] = $element.innerHTML;
-            break;
-            
-          case 'apply': // --- apply
+              if ($style && !$style.parentElement) {
 
-            if ($style) {
+                this.$runner.appendChild($style);
+                $style = this.createStyle();
 
-              this.$runner.appendChild($style);
-              $style = this.createStyle();
+              } else if ($element && !$element.parentElement) {
 
-            } else if ($element && !$element.parentElement) {
+                this.$body.appendChild($element);
 
-              this.$body.appendChild($element);
+              } else if ($script && !$script.parentElement) {
 
-            } else if ($script) {
+                this.$runner.appendChild($script);
+                $script = this.createScript();
 
-              this.$runner.appendChild($script);
-              $script = this.createScript();
+              }
 
-            }
+              break;
 
-            break;
 
-          case 'promise': // --- promise:promiseVar
 
-            extPromise = Promise.resolve();
+            case 'promise': // --- promise:promiseVar
 
-            if (window[rest[0]] instanceof Promise) {
-              extPromise = <Promise<any>>window[rest[0]];
-            }
+              if (window[rest[0]] instanceof Promise) {
+                returnPromise = <Promise<any>>window[rest[0]];
+              }
 
-            break;
-        }
-        
-        //forOfPromise = extPromise;
+              break;
+          }
 
-        forOfPromise = asyncForOf((char: string) => {
 
-          this.$display.textContent += char;
-          return extPromise;
+          return returnPromise;
 
-        }, chars, this.config.typingSpeed).then(() => {
-
-          this.$display.textContent += '\n';
-          return Promise.resolve();
-
-        });
+        });        
 
       } else {
         
@@ -265,25 +269,26 @@ export class Coder {
             // the html as a string and innerHTML this string
             // into the the element right away. If we don't do so, 
             // we lose markup because it becomes invalid and gets lost
-            $element.dataset['innerHtml'] += char;
-            $element.innerHTML = $element.dataset['innerHtml'];
+            elemInnerHtml += char;
+            $element.innerHTML = elemInnerHtml;
 
           } else if ($script) {
             $script.textContent += char;
           }
           
-          return extPromise;
+          return returnPromise;
 
         }, chars, this.config.typingSpeed).then(() => {
 
           this.$display.textContent += '\n';
+
           if ($style) {
             $style.textContent += '\n';
           } else if ($script) {
             $script.textContent += '\n';
           }
 
-          return Promise.resolve();
+          return returnPromise;
 
         });
 
@@ -294,12 +299,8 @@ export class Coder {
     }, lines).then(() => {
 
       $style = null;
-
-      if ($element) {
-        $element.dataset['innerHtml'] = '';
-        $element = null;
-      }
-
+      $element = null;
+      elemInnerHtml = '';
       $script = null;
 
       return Promise.resolve();

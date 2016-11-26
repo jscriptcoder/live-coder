@@ -79,10 +79,6 @@ var Live =
 	        if (type === void 0) { type = 'text/javascript'; }
 	        return this.createElement('script', { type: type });
 	    };
-	    Coder.prototype.asyncLineBreak = function () {
-	        this.$display.textContent += '\n';
-	        return Promise.resolve();
-	    };
 	    Coder.prototype.updateDisplayScroll = function () { };
 	    Coder.prototype.run = function (code) {
 	        var _this = this;
@@ -90,71 +86,88 @@ var Live =
 	        var lines = code.trim().split('\n');
 	        var $style;
 	        var $element;
+	        var elemInnerHtml;
 	        var $script;
 	        return utils_1.asyncForOf(function (line) {
 	            var forOfPromise;
-	            var extPromise = Promise.resolve();
+	            var returnPromise = Promise.resolve();
 	            var chars = line.split('');
 	            var match = line.match(Coder.DIR_RE);
 	            if (match) {
-	                var _a = match[1].split(':'), section = _a[0], rest = _a.slice(1);
-	                switch (section.toLowerCase()) {
-	                    case 'css':
-	                        // --- css
-	                        // --- css:apply
-	                        $script = null;
-	                        $element && ($element.dataset['innerHtml'] = '', $element = null);
-	                        $style = _this.createStyle();
-	                        if (rest[0] && rest[0].toLowerCase() === 'apply') {
-	                            _this.$runner.appendChild($style);
-	                        }
-	                        break;
-	                    case 'js':
-	                        $style = null;
-	                        $element && ($element.dataset['innerHtml'] = '', $element = null);
-	                        $script = _this.createScript();
-	                        // can't be apply at this point, only at the end,
-	                        // would throw exeptions
-	                        break;
-	                    case 'html':
-	                        // --- html ($main)
-	                        // --- html:apply ($main)
-	                        // --- html:tag
-	                        // --- html:tag.class
-	                        // --- html:.class (tag = div)
-	                        // --- html:tag#id
-	                        // --- html:#id (tag = div)
-	                        // --- html:tag:apply
-	                        // --- html:apply:tag
-	                        $script = null;
-	                        $style = null;
-	                        $element && ($element.dataset['innerHtml'] = '');
-	                        if (rest[0]) {
-	                            var elem = rest[0], apply = rest[1];
-	                            // let's swap if the first one is "apply"
-	                            if (elem.toLowerCase() === 'apply') {
-	                                _b = [apply || '', elem], elem = _b[0], apply = _b[1];
+	                forOfPromise = utils_1.asyncForOf(function (char) {
+	                    _this.$display.textContent += char;
+	                    return returnPromise;
+	                }, chars, _this.config.typingSpeed).then(function () {
+	                    _this.$display.textContent += '\n';
+	                    var _a = match[1].split(':'), section = _a[0], rest = _a.slice(1);
+	                    switch (section.toLowerCase()) {
+	                        case 'css':
+	                            // --- css
+	                            // --- css:apply
+	                            $script = null;
+	                            $element = null;
+	                            elemInnerHtml = '';
+	                            $style = _this.createStyle();
+	                            if (rest[0] && rest[0].toLowerCase() === 'apply') {
+	                                _this.$runner.appendChild($style);
 	                            }
-	                            var selector = elem.match(Coder.SEL_RE);
-	                            // valid selector?
-	                            if (elem && selector) {
-	                                $element = document.querySelector(elem);
-	                                // does the element exist in the DOM?
-	                                if (!$element) {
-	                                    var _c = [selector[1] || 'div', selector[3], selector[4]], tagName = _c[0], symbol = _c[1], name_1 = _c[2];
-	                                    $element = _this.createElement(tagName);
-	                                    if (symbol && name_1) {
-	                                        // I know, this is crappy. Only supports classes or ids
-	                                        // and not even combined. TODO: make it better
-	                                        switch (symbol) {
-	                                            case '.':
-	                                                $element.className = name_1;
-	                                                break;
-	                                            case '#':
-	                                                $element.id = name_1;
-	                                                break;
+	                            break;
+	                        case 'js':
+	                            $style = null;
+	                            $element = null;
+	                            elemInnerHtml = '';
+	                            $script = _this.createScript();
+	                            // can't be apply at this point, only at the end,
+	                            // would throw exeptions
+	                            break;
+	                        case 'html':
+	                            // --- html ($wrapperElem)
+	                            // --- html:apply ($wrapperElem)
+	                            // --- html:tag
+	                            // --- html:tag.class
+	                            // --- html:.class (tag = div)
+	                            // --- html:tag#id
+	                            // --- html:#id (tag = div)
+	                            // --- html:tag:apply
+	                            // --- html:apply:tag
+	                            $script = null;
+	                            $style = null;
+	                            elemInnerHtml = '';
+	                            if (rest[0]) {
+	                                var elem = rest[0], apply = rest[1];
+	                                // let's swap if the first one is "apply"
+	                                if (elem.toLowerCase() === 'apply') {
+	                                    _b = [apply || '', elem], elem = _b[0], apply = _b[1];
+	                                }
+	                                var selector = elem.match(Coder.SEL_RE);
+	                                // valid selector?
+	                                if (elem && selector) {
+	                                    $element = document.querySelector(elem);
+	                                    // does the element exist in the DOM?
+	                                    if (!$element) {
+	                                        var _c = [selector[1] || 'div', selector[3], selector[4]], tagName = _c[0], symbol = _c[1], name_1 = _c[2];
+	                                        $element = _this.createElement(tagName);
+	                                        if (symbol && name_1) {
+	                                            // I know, this is crappy. Only supports classes or ids
+	                                            // and not even combined. TODO: make it better
+	                                            switch (symbol) {
+	                                                case '.':
+	                                                    $element.className = name_1;
+	                                                    break;
+	                                                case '#':
+	                                                    $element.id = name_1;
+	                                                    break;
+	                                            }
+	                                        }
+	                                        if (apply &&
+	                                            apply.toLowerCase() === 'apply' &&
+	                                            !$element.parentElement) {
+	                                            _this.$body.appendChild($element);
 	                                        }
 	                                    }
+	                                }
+	                                else {
+	                                    $element = _this.$wrapperElem;
 	                                    if (apply &&
 	                                        apply.toLowerCase() === 'apply' &&
 	                                        !$element.parentElement) {
@@ -162,47 +175,32 @@ var Live =
 	                                    }
 	                                }
 	                            }
-	                            else {
-	                                $element = _this.$wrapperElem;
-	                                if (apply &&
-	                                    apply.toLowerCase() === 'apply' &&
-	                                    !$element.parentElement) {
-	                                    _this.$body.appendChild($element);
-	                                }
+	                            $element = $element || _this.$wrapperElem;
+	                            // in case there was already content
+	                            // we can continue writing html in the element
+	                            elemInnerHtml = $element.innerHTML;
+	                            break;
+	                        case 'apply':
+	                            if ($style && !$style.parentElement) {
+	                                _this.$runner.appendChild($style);
+	                                $style = _this.createStyle();
 	                            }
-	                        }
-	                        $element = $element || _this.$wrapperElem;
-	                        // in case there was already content
-	                        // we can continue writing html in the element
-	                        $element.dataset['innerHtml'] = $element.innerHTML;
-	                        break;
-	                    case 'apply':
-	                        if ($style) {
-	                            _this.$runner.appendChild($style);
-	                            $style = _this.createStyle();
-	                        }
-	                        else if ($element && !$element.parentElement) {
-	                            _this.$body.appendChild($element);
-	                        }
-	                        else if ($script) {
-	                            _this.$runner.appendChild($script);
-	                            $script = _this.createScript();
-	                        }
-	                        break;
-	                    case 'promise':
-	                        extPromise = Promise.resolve();
-	                        if (window[rest[0]] instanceof Promise) {
-	                            extPromise = window[rest[0]];
-	                        }
-	                        break;
-	                }
-	                //forOfPromise = extPromise;
-	                forOfPromise = utils_1.asyncForOf(function (char) {
-	                    _this.$display.textContent += char;
-	                    return extPromise;
-	                }, chars, _this.config.typingSpeed).then(function () {
-	                    _this.$display.textContent += '\n';
-	                    return Promise.resolve();
+	                            else if ($element && !$element.parentElement) {
+	                                _this.$body.appendChild($element);
+	                            }
+	                            else if ($script && !$script.parentElement) {
+	                                _this.$runner.appendChild($script);
+	                                $script = _this.createScript();
+	                            }
+	                            break;
+	                        case 'promise':
+	                            if (window[rest[0]] instanceof Promise) {
+	                                returnPromise = window[rest[0]];
+	                            }
+	                            break;
+	                    }
+	                    return returnPromise;
+	                    var _b;
 	                });
 	            }
 	            else {
@@ -217,13 +215,13 @@ var Live =
 	                        // the html as a string and innerHTML this string
 	                        // into the the element right away. If we don't do so, 
 	                        // we lose markup because it becomes invalid and gets lost
-	                        $element.dataset['innerHtml'] += char;
-	                        $element.innerHTML = $element.dataset['innerHtml'];
+	                        elemInnerHtml += char;
+	                        $element.innerHTML = elemInnerHtml;
 	                    }
 	                    else if ($script) {
 	                        $script.textContent += char;
 	                    }
-	                    return extPromise;
+	                    return returnPromise;
 	                }, chars, _this.config.typingSpeed).then(function () {
 	                    _this.$display.textContent += '\n';
 	                    if ($style) {
@@ -232,29 +230,26 @@ var Live =
 	                    else if ($script) {
 	                        $script.textContent += '\n';
 	                    }
-	                    return Promise.resolve();
+	                    return returnPromise;
 	                });
 	            }
 	            return forOfPromise;
-	            var _b;
 	        }, lines).then(function () {
 	            $style = null;
-	            if ($element) {
-	                $element.dataset['innerHtml'] = '';
-	                $element = null;
-	            }
+	            $element = null;
+	            elemInnerHtml = '';
 	            $script = null;
 	            return Promise.resolve();
 	        });
 	    };
-	    Coder.DIR_RE = /^\s*---\s*([a-z|\-|_|\.|#|:]+)?/i;
-	    Coder.SEL_RE = /^([a-z|\-|_]+)?((\.|#)([a-z|\-|_]+))?$/i;
+	    Coder.DIR_RE = /^\s*---\s*([a-z0-9|\-|_|\.|#|:]+)?/i;
+	    Coder.SEL_RE = /^([a-z0-9|\-|_]+)?((\.|#)([a-z0-9|\-|_]+))?$/i;
 	    Coder.domReady = function (callback) {
 	        document.addEventListener('DOMContentLoaded', callback);
 	    };
 	    Coder.DEFAULT_CONFIG = {
 	        displayClass: 'live-coder__display',
-	        wrapperElement: 'body-inner',
+	        wrapperElement: 'wrapper-element',
 	        typingSpeed: 50
 	    };
 	    return Coder;

@@ -1,1 +1,38 @@
-promise
+--- js
+var message = 'Hello World!!';
+var span = document.createElement('span');
+document.body.appendChild(span);
+
+var promise5sec = new Promise(function (resolve) {
+	setTimeout(function () {
+		span.innerHTML = message;
+		resolve();
+	}, 5000);
+});
+--- apply
+
+--- promise:promise5sec
+
+var anotherMessage = 'changing message';
+var promise10sec = new Promise(function (resolve) {
+	setTimeout(function () {
+		span.innerHTML = anotherMessage;
+		resolve();
+	}, 10000);
+});
+--- apply
+
+--- promise:promise10sec
+
+function swap(x, y) {
+	var _x = x;
+	x = y;
+	y = _x;
+	return [x, y];
+}
+
+var x = 5;
+var y = 6;
+var swapped = swap(x, y);
+span.innerHTML = '[' + swapped[0] + ', ' + swapped[1] + ']';
+--- apply
