@@ -1,0 +1,23 @@
+--- css:apply ---
+.live-coder__display {
+	background-color: black;
+	color: white;
+	padding: 4px;
+}
+
+--- html:div.lc-display__container ---
+<div class="lc-display__header"></div>
+<div class="lc-display__body"></div>
+--- apply ---
+
+--- js ---
+var lcDisplay = document.querySelector('.live-coder__display');
+var lcDisplayBody = document.querySelector('.lc-display__body');
+
+lcDisplayBody.appendChild(lcDisplay);
+--- apply ---
+
+--- css:apply ---
+.lc-display__header {
+	
+}
