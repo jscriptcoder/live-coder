@@ -6,18 +6,18 @@
 
 	<script src="dist/live-coder.min.js"></script>
 	<script>
-		Live.Coder.domReady(function () {
-			//fetch('test/styles.txt')
-			//fetch('test/scripts.txt')
-			//fetch('test/html.txt')
-			//fetch('test/promise.txt')
-			fetch('test/jscriptcoder.txt')
-				.then( response => response.text())
-				.then( code => {
-					var liveCoder = new Live.Coder({ typingSpeed: 0 });
-					liveCoder.run(code);
-				});
-		});
+		var liveCoder = new Live.Coder({ typingSpeed: 50 });
+
+		//fetch('test/styles.txt')
+		//fetch('test/scripts.txt')
+		//fetch('test/html.txt')
+		//fetch('test/promise.txt')
+		fetch('test/jscriptcoder.txt')
+			.then( response => response.text())
+			.then( code => {
+				liveCoder.run(code).then(() => alert('DONE!!!') );
+			});
+
 	</script>
 	
 </head>

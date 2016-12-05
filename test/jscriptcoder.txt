@@ -2,22 +2,85 @@
 .live-coder__display {
 	background-color: black;
 	color: white;
+	margin: 0;
 	padding: 4px;
+	height: 400px;
+	width: 600px;
+	overflow: auto;
 }
 
---- html:div.lc-display__container ---
-<div class="lc-display__header"></div>
-<div class="lc-display__body"></div>
+--- html:div.display-container ---
+<div class="display-header">
+
+	<div class="display-header__actions">
+		<div class="close"></div>
+		<div class="minimize"></div>
+		<div class="maximie"></div>
+	</div>
+
+	<div class="display-header__title"></div>
+
+</div>
+<div class="display-body"></div>
 --- apply ---
 
 --- js ---
 var lcDisplay = document.querySelector('.live-coder__display');
-var lcDisplayBody = document.querySelector('.lc-display__body');
+var displayBody = document.querySelector('.display-body');
 
-lcDisplayBody.appendChild(lcDisplay);
+displayBody.appendChild(lcDisplay);
 --- apply ---
 
+--- html:div.display-header__title:apply ---
+live-coder@jscriptcoder
+
 --- css:apply ---
-.lc-display__header {
-	
+.display-container {
+	transition: all 0.3s;
+	position: absolute;
+	top: 10px;
+	left: 10px;
+}
+
+.display-header {
+	height: 30px;
+	background-color: #403e3e;
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+	display: flex;
+	align-items: center;
+}
+
+.display-header__actions {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0 8px;
+}
+
+.display-header__actions > div {
+	width: 16px;
+	height: 16px;
+	background-color: grey;
+	border-radius: 8px;
+	margin: 0 2px;
+}
+
+.display-header__title {
+	color: white;
+	font-family: monospace;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.display-header__actions .close {
+	background-color: #dc5024;
+}
+
+.display-header__actions .minimize {}
+.display-header__actions .maximize {}
+
+.display-container {
+	top: 100px;
+	left: 100px;
 }
