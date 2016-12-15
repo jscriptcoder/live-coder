@@ -1,9 +1,22 @@
-import { asyncForOf, EmptyPromise } from './utils';
+import {
+
+  asyncForOf, 
+  waitForDom, 
+  EmptyPromise
+
+} from './utils';
 
 export interface CoderConfig {
   displayClass?: string;
   defaultContainer?: string;
   typingSpeed?: number;
+}
+
+export enum CoderState {
+  READY,
+  RUNNING,
+  PAUSED,
+  DONE
 }
 
 export class Coder {
@@ -16,12 +29,6 @@ export class Coder {
     defaultContainer: 'default-container',
     typingSpeed: 50
   };
-
-  private static waitForDom(): EmptyPromise {
-    return new Promise<any>((resolve: Function) => {
-      document.addEventListener('DOMContentLoaded', () => resolve() );
-    });
-  }
 
   private static isElementAttached($elem: HTMLElement): boolean {
     return !!$elem.parentElement;
@@ -41,6 +48,7 @@ export class Coder {
   
   private config: CoderConfig;
   private domReady: EmptyPromise;
+  private state: CoderState;
 
   private $runner: HTMLElement;
   private $defContainer: HTMLElement;
@@ -50,13 +58,14 @@ export class Coder {
   constructor(config: CoderConfig = {}) {
     this.config = Object.assign({}, Coder.DEFAULT_CONFIG, config);
 
-    this.domReady = Coder.waitForDom();
+    this.domReady = waitForDom();
 
     this.domReady.then(() => {
       this.$runner = document.getElementsByTagName('head')[0] || document.body;
       this.$defContainer = this.createElement(this.config.defaultContainer);
       this.$body = document.body;
       this.$display = this.createDisplay();
+      this.state = CoderState.READY;
     })
     
   }
@@ -86,7 +95,7 @@ export class Coder {
     return this.createElement('script', { type });
   }
 
-  private writeToAndScrollDisplay(char: string): void {
+  private writeAndScrollDisplay(char: string): void {
     this.$display.textContent += char;
     this.$display.scrollTop = this.$display.scrollHeight;
   }
@@ -94,6 +103,8 @@ export class Coder {
   public run(code: string = ''): EmptyPromise {
 
     return this.domReady.then(() => {
+
+      this.state = CoderState.RUNNING;
 
       const lines = code.trim().split('\n');
       
@@ -114,7 +125,7 @@ export class Coder {
 
           forOfPromise = asyncForOf((char: string) => {
 
-            this.writeToAndScrollDisplay(char);
+            this.writeAndScrollDisplay(char);
 
             return returnPromise;
 
@@ -258,7 +269,7 @@ export class Coder {
                 break;
 
 
-
+              case 'await': // --- await:promiseVar
               case 'promise': // --- promise:promiseVar
 
                 if (window[rest[0]] instanceof Promise) {
@@ -277,7 +288,7 @@ export class Coder {
 
           forOfPromise = asyncForOf((char: string) => {
 
-            this.writeToAndScrollDisplay(char);
+            this.writeAndScrollDisplay(char);
 
             if ($style) {
               $style.textContent += char;
@@ -299,7 +310,7 @@ export class Coder {
 
           }, chars, this.config.typingSpeed).then(() => {
 
-            this.writeToAndScrollDisplay('\n');
+            this.writeAndScrollDisplay('\n');
 
             if ($style) {
               $style.textContent += '\n';
@@ -322,11 +333,25 @@ export class Coder {
         elemInnerHtml = '';
         $script = null;
 
+        this.state = CoderState.DONE;
+
         return Promise.resolve();
 
       });
 
     });
     
+  }
+
+  public setTypingSpeed(typingSpeed: number): void {
+    this.config.typingSpeed = typingSpeed;
+  }
+
+  public pause(): void {
+    this.state = CoderState.PAUSED;
+  }
+
+  public resume(): void {
+    this.state = CoderState.RUNNING;
   }
 }

@@ -41,3 +41,9 @@ export function asyncForOf<T>(fn: {(value: T): EmptyPromise}, array: T[], delay?
 
   return asyncLoop(bodyLoop, conditionLoop, delay);
 }
+
+export function waitForDom(): EmptyPromise {
+  return new Promise<any>((resolve: Function) => {
+    document.addEventListener('DOMContentLoaded', () => resolve() );
+  });
+}

@@ -14,8 +14,8 @@
 		//fetch('test/promise.txt')
 		fetch('test/jscriptcoder.txt')
 			.then( response => response.text())
-			.then( code => {
-				liveCoder.run(code).then(() => alert('DONE!!!') );
+			.then( program => {
+				liveCoder.run(program).then(() => alert('DONE!!!') );
 			});
 
 	</script>
