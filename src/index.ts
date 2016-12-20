@@ -1,33 +1,36 @@
+import { Deferred } from './deferred';
 import {
-
-  asyncForOf, 
-  waitForDom, 
-  EmptyPromise
-
+  asyncForOf,
+  waitForDom,
+  AnyPromise
 } from './utils';
 
 export interface CoderConfig {
   displayClass?: string;
   defaultContainer?: string;
   typingSpeed?: number;
+  pauseOnClick?: boolean;
+  paused?: boolean;
 }
 
 export enum CoderState {
   READY,
   RUNNING,
   PAUSED,
-  DONE
+  READY_PAUSED
 }
 
 export class Coder {
-  
+
   private static DIR_RE = /^\s*---\s*([a-z0-9|\-|_|\.|#|:]+)?/i;
   private static SEL_RE = /^([a-z0-9|\-|_]+)?((\.|#)([a-z0-9|\-|_]+))?$/i;
-  
+
   private static DEFAULT_CONFIG: CoderConfig = {
     displayClass: 'live-coder__display',
     defaultContainer: 'default-container',
-    typingSpeed: 50
+    typingSpeed: 50,
+    pauseOnClick: true,
+    paused: false
   };
 
   private static isElementAttached($elem: HTMLElement): boolean {
@@ -36,8 +39,8 @@ export class Coder {
 
   private static appendIfApply(apply: string, $elem: HTMLElement, $container: HTMLElement): void {
     if (
-      apply && 
-      $elem && 
+      apply &&
+      $elem &&
       apply.toLowerCase() === 'apply' &&
       !Coder.isElementAttached($elem)) {
 
@@ -45,9 +48,10 @@ export class Coder {
 
     }
   }
-  
+
   private config: CoderConfig;
-  private domReady: EmptyPromise;
+  private domReady: AnyPromise;
+  private paused: Deferred<any>;
   private state: CoderState;
 
   private $runner: HTMLElement;
@@ -59,15 +63,42 @@ export class Coder {
     this.config = Object.assign({}, Coder.DEFAULT_CONFIG, config);
 
     this.domReady = waitForDom();
+    this.paused = new Deferred<any>();
 
+    this.init();
+  }
+
+  private init(): void {
     this.domReady.then(() => {
+
       this.$runner = document.getElementsByTagName('head')[0] || document.body;
       this.$defContainer = this.createElement(this.config.defaultContainer);
       this.$body = document.body;
       this.$display = this.createDisplay();
-      this.state = CoderState.READY;
-    })
-    
+
+      if (this.config.pauseOnClick) {
+        document.addEventListener('click', this.clickPause.bind(this))
+      }
+
+      if (this.config.paused) {
+        this.pause();
+      } else {
+        this.resume();
+      }
+    });
+  }
+
+  private clickPause(): void {
+    switch (this.state) {
+      case CoderState.PAUSED:
+      case CoderState.READY_PAUSED:
+        this.resume();
+        break;
+      case CoderState.READY:
+      case CoderState.RUNNING:
+        this.pause();
+        break;
+    }
   }
 
   private createElement(tagName: string, props: {[key: string]: any} = {}, $appendTo?: HTMLElement): HTMLElement {
@@ -75,11 +106,11 @@ export class Coder {
     for (let propName of Object.keys(props)) {
       $elem[propName] = props[propName];
     }
-    
+
     if ($appendTo) {
       $appendTo.appendChild($elem);
     }
-    
+
     return $elem;
   }
 
@@ -100,14 +131,17 @@ export class Coder {
     this.$display.scrollTop = this.$display.scrollHeight;
   }
 
-  public run(code: string = ''): EmptyPromise {
+  public run(code: string = ''): AnyPromise {
 
-    return this.domReady.then(() => {
+    return Promise.all([
+      this.paused.promise,
+      this.domReady
+    ]).then(() => {
 
       this.state = CoderState.RUNNING;
 
       const lines = code.trim().split('\n');
-      
+
       let $style: HTMLElement;
       let $element: HTMLElement;
       let elemInnerHtml: string;
@@ -115,28 +149,27 @@ export class Coder {
 
       return asyncForOf((line: string) => {
 
-        let forOfPromise: EmptyPromise;
+        let forOfPromise: AnyPromise;
         let returnPromise = Promise.resolve();
 
         const chars = line.split('');
-        const match = line.match(Coder.DIR_RE);
-      
-        if (match) {
+        const matchDir = line.match(Coder.DIR_RE);
+
+        if (matchDir) {
 
           forOfPromise = asyncForOf((char: string) => {
 
             this.writeAndScrollDisplay(char);
-
-            return returnPromise;
+            return Promise.all([this.paused.promise, returnPromise]);
 
           }, chars, this.config.typingSpeed).then(() => {
 
             this.$display.textContent += '\n';
 
-            const [section, ...rest] = match[1].split(':');
+            const [directive, ...rest] = matchDir[1].split(':');
 
-            switch (section.toLowerCase()) {
-                
+            switch (directive.toLowerCase()) {
+
               case 'css':
 
                 // --- css
@@ -151,7 +184,7 @@ export class Coder {
                 Coder.appendIfApply(rest[0], $style, this.$runner);
 
                 break;
-                
+
 
 
               case 'js': // --- js
@@ -169,7 +202,7 @@ export class Coder {
 
 
 
-              case 'html': // tricky one o_O
+              case 'html': // tricky one
 
                 // --- html ($defContainer)
                 // --- html:apply ($defContainer)
@@ -186,7 +219,7 @@ export class Coder {
                 elemInnerHtml = '';
 
                 if (rest[0]) {
-                  
+
                   let [elem, apply] = rest;
 
                   // let's swap if the first one is "apply"
@@ -194,20 +227,25 @@ export class Coder {
                     [elem, apply] = [apply || '', elem];
                   }
 
-                  const selector = elem.match(Coder.SEL_RE);
+                  const matchSel = elem.match(Coder.SEL_RE);
 
                   // valid selector?
-                  if (elem && selector) {
+                  if (elem && matchSel) {
 
                     $element = <HTMLElement>document.querySelector(elem);
-                    
+
                     // does the element exist in the DOM?
                     if (!$element) {
 
                       const [
-                        tagName, 
-                        symbol, 
-                        name] = [selector[1] || 'div', selector[3], selector[4]];
+                        tagName,
+                        symbol,
+                        name
+                      ] = [
+                          matchSel[1] || 'div',
+                          matchSel[3],
+                          matchSel[4]
+                      ];
 
                       $element = this.createElement(tagName);
 
@@ -225,17 +263,17 @@ export class Coder {
                         }
 
                       }
-                      
+
                       Coder.appendIfApply(apply, $element, this.$body);
 
                     }
-                    
+
                   } else {
 
                     $element = this.$defContainer;
                     Coder.appendIfApply(apply, $element, this.$body);
 
-                  }              
+                  }
 
                 }
 
@@ -245,7 +283,7 @@ export class Coder {
                 // we can continue writing html in the element
                 elemInnerHtml = $element.innerHTML;
                 break;
-                
+
 
 
               case 'apply': // --- apply
@@ -280,9 +318,9 @@ export class Coder {
             }
 
 
-            return returnPromise;
+            return Promise.all([this.paused.promise, returnPromise]);
 
-          });        
+          });
 
         } else {
 
@@ -297,7 +335,7 @@ export class Coder {
               // in order to be able to write dynamic html and
               // see the changes right away, we need to store
               // the html as a string and innerHTML this string
-              // into the the element right away. If we don't do so, 
+              // into the the element right away. If we don't do so,
               // we lose markup because it becomes invalid and gets lost
               elemInnerHtml += char;
               $element.innerHTML = elemInnerHtml;
@@ -305,8 +343,8 @@ export class Coder {
             } else if ($script) {
               $script.textContent += char;
             }
-            
-            return returnPromise;
+
+            return Promise.all([this.paused.promise, returnPromise]);
 
           }, chars, this.config.typingSpeed).then(() => {
 
@@ -318,7 +356,7 @@ export class Coder {
               $script.textContent += '\n';
             }
 
-            return returnPromise;
+            return Promise.all([this.paused.promise, returnPromise]);
 
           });
 
@@ -333,14 +371,14 @@ export class Coder {
         elemInnerHtml = '';
         $script = null;
 
-        this.state = CoderState.DONE;
+        this.state = CoderState.READY;
 
         return Promise.resolve();
 
       });
 
     });
-    
+
   }
 
   public setTypingSpeed(typingSpeed: number): void {
@@ -348,10 +386,20 @@ export class Coder {
   }
 
   public pause(): void {
-    this.state = CoderState.PAUSED;
+    this.paused = new Deferred<any>();
+    if (this.state === CoderState.READY) {
+      this.state = CoderState.READY_PAUSED;
+    } else {
+      this.state = CoderState.PAUSED;
+    }
   }
 
   public resume(): void {
-    this.state = CoderState.RUNNING;
+    this.paused.resolve();
+    if (this.state === CoderState.READY_PAUSED) {
+      this.state = CoderState.READY;
+    } else {
+      this.state = CoderState.RUNNING;
+    }
   }
 }

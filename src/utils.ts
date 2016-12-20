@@ -1,8 +1,8 @@
 import { Deferred } from './deferred';
 
-export type EmptyPromise = Promise<undefined>;
+export type AnyPromise = Promise<any>;
 
-export function asyncLoop(fn: {(): EmptyPromise}, condition: {(): boolean}, delay?: number): EmptyPromise {
+export function asyncLoop(fn: {(): AnyPromise}, condition: {(): boolean}, delay?: number): AnyPromise {
   const deferred = new Deferred<any>();
 
   const loop = (): void => {
@@ -26,7 +26,7 @@ export function asyncLoop(fn: {(): EmptyPromise}, condition: {(): boolean}, dela
   return deferred.promise;
 }
 
-export function asyncForOf<T>(fn: {(value: T): EmptyPromise}, array: T[], delay?: number): EmptyPromise {
+export function asyncForOf<T>(fn: {(value: T): AnyPromise}, array: T[], delay?: number): AnyPromise {
   let index: number = 0;
   const length: number = array.length;
   let value: any;
@@ -42,7 +42,7 @@ export function asyncForOf<T>(fn: {(value: T): EmptyPromise}, array: T[], delay?
   return asyncLoop(bodyLoop, conditionLoop, delay);
 }
 
-export function waitForDom(): EmptyPromise {
+export function waitForDom(): AnyPromise {
   return new Promise<any>((resolve: Function) => {
     document.addEventListener('DOMContentLoaded', () => resolve() );
   });
