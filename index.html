@@ -8,14 +8,12 @@
 	<script>
 		var liveCoder = new Live.Coder({ typingSpeed: 50 });
 
-		//fetch('test/styles.txt')
-		//fetch('test/scripts.txt')
-		//fetch('test/html.txt')
-		//fetch('test/promise.txt')
-		fetch('test/jscriptcoder.txt')
+		fetch('test/example.txt')
 			.then( response => response.text())
 			.then( program => {
-				liveCoder.run(program).then(() => alert('DONE!!!') );
+				liveCoder.run(program).then(() => {
+					console.info('Program finished')
+				});
 			});
 
 	</script>

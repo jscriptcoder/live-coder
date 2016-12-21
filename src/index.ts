@@ -378,14 +378,22 @@ export class Coder {
     this.config.typingSpeed = typingSpeed;
   }
 
-  public pause(): void {
+  public pause(timeout?: number): void {
     this.paused = new Deferred<any>();
     this.isPaused = true;
+
+    if (typeof timeout === 'number') {
+      setTimeout(() => this.resume(), timeout);
+    }
   }
 
   public resume(): void {
     this.paused.resolve();
     this.isPaused = false;
+  }
+
+  public getDeferredPromise(): Deferred<any> {
+    return new Deferred<any>();
   }
 
   public destroy(): void {
