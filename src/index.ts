@@ -13,13 +13,6 @@ export interface CoderConfig {
   paused?: boolean;
 }
 
-export enum CoderState {
-  READY,
-  RUNNING,
-  PAUSED,
-  READY_PAUSED
-}
-
 export class Coder {
 
   private static DIR_RE = /^\s*---\s*([a-z0-9|\-|_|\.|#|:]+)?/i;
@@ -52,18 +45,21 @@ export class Coder {
   private config: CoderConfig;
   private domReady: AnyPromise;
   private paused: Deferred<any>;
-  private state: CoderState;
+  private isPaused: boolean;
 
   private $runner: HTMLElement;
   private $defContainer: HTMLElement;
   private $body: HTMLElement;
   private $display: HTMLElement;
 
+  private togglePauseListener: EventListener;
+
   constructor(config: CoderConfig = {}) {
     this.config = Object.assign({}, Coder.DEFAULT_CONFIG, config);
 
     this.domReady = waitForDom();
     this.paused = new Deferred<any>();
+    this.isPaused = true;
 
     this.init();
   }
@@ -77,7 +73,8 @@ export class Coder {
       this.$display = this.createDisplay();
 
       if (this.config.pauseOnClick) {
-        document.addEventListener('click', this.clickPause.bind(this))
+        this.togglePauseListener = this.togglePause.bind(this);
+        document.addEventListener('click', this.togglePauseListener);
       }
 
       if (this.config.paused) {
@@ -88,16 +85,11 @@ export class Coder {
     });
   }
 
-  private clickPause(): void {
-    switch (this.state) {
-      case CoderState.PAUSED:
-      case CoderState.READY_PAUSED:
+  private togglePause(): void {
+    if (this.isPaused) {
         this.resume();
-        break;
-      case CoderState.READY:
-      case CoderState.RUNNING:
+    } else {
         this.pause();
-        break;
     }
   }
 
@@ -131,14 +123,13 @@ export class Coder {
     this.$display.scrollTop = this.$display.scrollHeight;
   }
 
+  private continue(continuePromise: AnyPromise) {
+    return Promise.all([this.paused.promise, continuePromise]);
+  }
+
   public run(code: string = ''): AnyPromise {
 
-    return Promise.all([
-      this.paused.promise,
-      this.domReady
-    ]).then(() => {
-
-      this.state = CoderState.RUNNING;
+    return this.continue(this.domReady).then(() => {
 
       const lines = code.trim().split('\n');
 
@@ -149,7 +140,10 @@ export class Coder {
 
       return asyncForOf((line: string) => {
 
+        // will resolve for each line processed (either directive or code)
         let forOfPromise: AnyPromise;
+
+        // resolved promise by default until await/promise directive
         let returnPromise = Promise.resolve();
 
         const chars = line.split('');
@@ -160,7 +154,7 @@ export class Coder {
           forOfPromise = asyncForOf((char: string) => {
 
             this.writeAndScrollDisplay(char);
-            return Promise.all([this.paused.promise, returnPromise]);
+            return this.continue(returnPromise);
 
           }, chars, this.config.typingSpeed).then(() => {
 
@@ -252,7 +246,8 @@ export class Coder {
                       if (symbol && name) {
 
                         // I know, this is crappy. Only supports classes or ids
-                        // and not even combined. TODO: make it better
+                        // and not even combined.
+                        // TODO: don't be lazy and make it better
                         switch (symbol) {
                           case '.':
                             $element.className = name;
@@ -311,14 +306,14 @@ export class Coder {
               case 'promise': // --- promise:promiseVar
 
                 if (window[rest[0]] instanceof Promise) {
-                  returnPromise = <Promise<any>>window[rest[0]];
+                  returnPromise = <AnyPromise>window[rest[0]];
                 }
 
                 break;
             }
 
 
-            return Promise.all([this.paused.promise, returnPromise]);
+            return this.continue(returnPromise);
 
           });
 
@@ -344,7 +339,7 @@ export class Coder {
               $script.textContent += char;
             }
 
-            return Promise.all([this.paused.promise, returnPromise]);
+            return this.continue(returnPromise);
 
           }, chars, this.config.typingSpeed).then(() => {
 
@@ -356,7 +351,7 @@ export class Coder {
               $script.textContent += '\n';
             }
 
-            return Promise.all([this.paused.promise, returnPromise]);
+            return this.continue(returnPromise);
 
           });
 
@@ -370,8 +365,6 @@ export class Coder {
         $element = null;
         elemInnerHtml = '';
         $script = null;
-
-        this.state = CoderState.READY;
 
         return Promise.resolve();
 
@@ -387,19 +380,17 @@ export class Coder {
 
   public pause(): void {
     this.paused = new Deferred<any>();
-    if (this.state === CoderState.READY) {
-      this.state = CoderState.READY_PAUSED;
-    } else {
-      this.state = CoderState.PAUSED;
-    }
+    this.isPaused = true;
   }
 
   public resume(): void {
     this.paused.resolve();
-    if (this.state === CoderState.READY_PAUSED) {
-      this.state = CoderState.READY;
-    } else {
-      this.state = CoderState.RUNNING;
+    this.isPaused = false;
+  }
+
+  public destroy(): void {
+    if (this.togglePauseListener) {
+      document.removeEventListener('click', this.togglePauseListener);
     }
   }
 }
