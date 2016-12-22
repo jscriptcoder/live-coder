@@ -4,7 +4,7 @@ Amazing tool to simulate live coding Frontend technologies: *HTML, CSS and Javas
 ## Motivation
 I always found live coding a great way to present ideas. But we're human, and we make mistakes, above all when there are people watching us. It could be somewhat intimidating... At the same time, I always thought how cool would be if a program could implement other programs in real time :-P
 
-See demo here: [link]
+[See demo here](https://jscriptcoder.github.io/live-coder/)
 
 ## Download source
 ```shell
