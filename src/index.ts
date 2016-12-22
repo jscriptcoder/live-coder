@@ -110,12 +110,19 @@ export class Coder {
     return this.createElement('pre', { className: this.config.displayClass }, document.body);
   }
 
-  private createStyle(type: string = 'text/css'): HTMLElement {
-    return this.createElement('style', { type });
+  private createStyle(): HTMLStyleElement {
+    return <HTMLStyleElement>this.createElement('style', { type: 'text/css' });
   }
 
-  private createScript(type: string = 'text/javascript'): HTMLElement {
-    return this.createElement('script', { type });
+  private createScript(): HTMLScriptElement {
+    return <HTMLScriptElement>this.createElement('script', { type: 'text/javascript' });
+  }
+
+  private createStylesheetLink(): HTMLLinkElement {
+    return <HTMLLinkElement>this.createElement('link', {
+      rel: 'stylesheet',
+      type: 'text/css'
+    });
   }
 
   private writeAndScrollDisplay(char: string): void {
@@ -394,6 +401,23 @@ export class Coder {
 
   public getDeferredPromise(): Deferred<any> {
     return new Deferred<any>();
+  }
+
+  public loadStyle(url: string): void {
+    const link = this.createStylesheetLink();
+    link.href = url;
+    this.$runner.appendChild(link);
+  }
+
+  public loadScript(url: string): AnyPromise {
+    const script = this.createScript();
+    const deferred = this.getDeferredPromise();
+
+    script.onload = deferred.resolve;
+    script.src = url;
+    this.$runner.appendChild(script);
+
+    return deferred.promise;
   }
 
   public destroy(): void {

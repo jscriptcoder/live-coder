@@ -154,7 +154,6 @@ var wait5sec = new Promise(function (resolve) {
 
 --- promise:wait5sec ---
 
---- js ---
 /**
  * We can also pause liveCoder for an amount of time.
  * For this we need to have access to the instance
@@ -162,7 +161,6 @@ var wait5sec = new Promise(function (resolve) {
 liveCoder.pause(5000);
 --- apply ---
 
---- js ---
 /**
  * Or we pause indefinitely.
  * IMPORTANT: in order to continue, click anywhere
@@ -176,10 +174,10 @@ liveCoder.pause();
  * A little bit of messing around with the window :-P
  */
 .display-container { transition: all 0.3s ; }
-.display-container { left: 250px; }
-.display-container { top: 250px; }
-.display-container { left: 20px; }
-.display-container { top: 20px; }
+.display-container { left: 250px; transform: rotate(45deg); }
+.display-container { top: 250px; transform: rotate(-45deg); }
+.display-container { left: 20px; transform: rotate(180deg); }
+.display-container { top: 20px; transform: rotate(0deg); }
 .display-container { transition: none; }
 
 --- js ---
@@ -201,9 +199,11 @@ liveCoder.setTypingSpeed(10);
 		dContainer.style.top = (event.clientY - diffY) + 'px';
 	};
 
-	dHeader.addEventListener('mousedown', function (event) {
-		event.stopPropagation(); // stops click on document
+	dHeader.addEventListener('click', function (event) {
+		event.stopPropagation(); // prevents click on the document
+	});
 
+	dHeader.addEventListener('mousedown', function (event) {
 		diffX = event.clientX - dContainer.offsetLeft;
 		diffY = event.clientY - dContainer.offsetTop;
 
@@ -214,7 +214,9 @@ liveCoder.setTypingSpeed(10);
 
 	dHeader.addEventListener('mouseup', function (event) {
 		diffX = diffY = void 0;
+
 		dHeader.classList.remove('dragging');
+
 		document.removeEventListener('mousemove', mousemoveHandler);
 	});
 
@@ -230,7 +232,6 @@ liveCoder.pause(5000);
 /**
  * Ooops!, we forgot something. We forgot the icons
  * for the actions buttons. Let's use FontAwesome
- * to add nice ones
  */
 var head = document.getElementsByTagName('head')[0];
 var scriptFontAwesome = document.createElement('script');
@@ -261,6 +262,6 @@ maxButton.className += ' fa fa-square-o';
 .display-header__actions > div {
 	font-size: 10px;
 	text-align: center;
-    line-height: 16px;
-    color: #382b2b;
+	line-height: 16px;
+	color: #382b2b;
 }
