@@ -18,7 +18,7 @@ body {
  * Now we're ready to style the terminal.
  * Let's begin with the display, which by default
  * has the class "live-coder__display", but this
- * can be configure
+ * can be configured
  */
 
 .live-coder__display {
@@ -101,11 +101,6 @@ displayBody.appendChild(lcDisplay);
 	align-items: center;
 }
 
-.display-header.dragging {
-	/* for later adding dragging functionality */
-	cursor: move;
-}
-
 --- html:div.display-header__title:apply ---
 <!-- Title of the terminal -->
 live-coder@jscriptcoder
@@ -185,6 +180,10 @@ liveCoder.pause();
 liveCoder.setTypingSpeed(10);
 --- apply ---
 
+--- css:apply ---
+.display-header.dragging { cursor: move; }
+
+--- js ---
 (function () {
 	// Private scope so as not to leak variables outside
 
@@ -214,9 +213,7 @@ liveCoder.setTypingSpeed(10);
 
 	dHeader.addEventListener('mouseup', function (event) {
 		diffX = diffY = void 0;
-
 		dHeader.classList.remove('dragging');
-
 		document.removeEventListener('mousemove', mousemoveHandler);
 	});
 
@@ -263,5 +260,5 @@ maxButton.className += ' fa fa-square-o';
 	font-size: 10px;
 	text-align: center;
 	line-height: 16px;
-	color: #382b2b;
+	color: #424242;
 }
