@@ -1,10 +1,13 @@
 var webpack = require('webpack');
 
 module.exports = {
-    entry: './src/index.ts',
+    entry: {
+        'polyfills': './src/polyfills.ts',
+        'live-coder': './src/index.ts'
+    },
     output: {
         library: 'Live',
-        filename: 'dist/live-coder.min.js'
+        filename: 'dist/[name].min.js'
     },
     resolve: {
         extensions: ['', '.ts', '.js']

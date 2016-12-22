@@ -28,6 +28,8 @@
     "webpack": "^1.13.3"
   },
   "dependencies": {
-    "es6-shim": "^0.35.1"
+    "core-js": "^2.4.1",
+    "es6-shim": "^0.35.1",
+    "whatwg-fetch": "^2.0.1"
   }
 }
