@@ -2,7 +2,7 @@
 Amazing tool to simulate live coding Frontend technologies: *HTML, CSS and Javascript*. That means, You don't actually have to code yourself, just pass a program and **LiveCoder** will do the job for you. No more unexpected problems, typos, exceptions, etc... You prepare the program, making sure everything works fine, and your presentation is ready to go :-)
 
 ## Motivation
-I always found live coding a great way to present ideas. But we're human, and we make mistakes, above all when there are people watching us. It could be somwwhat intimidating... At the same time, I always thought how cool would be if a program could implement other programs in real time :-P
+I always found live coding a great way to present ideas. But we're human, and we make mistakes, above all when there are people watching us. It could be somewhat intimidating... At the same time, I always thought how cool would be if a program could implement other programs in real time :-P
 
 See demo here: [link]
 
@@ -56,7 +56,9 @@ public run(code: string = ''): Promise<any>
 *Example*
 
 ```javascript
-liveCoder.run(program);
+// Runs a program returning a promise that will be
+// resolved when the program is finished
+liveCoder.run(program)
   .then(() => console.log('Program finished.'));
 ```
 
@@ -71,7 +73,7 @@ public setTypingSpeed(typingSpeed: number): void
 *Example*
 
 ```javascript
-liveCoder.setTypingSpeed(10);
+liveCoder.setTypingSpeed(10); // Changes the typing speed
 ```
 
 ### Coder#pause
@@ -87,6 +89,20 @@ public pause(timeout?: number): void
 ```javascript
 liveCoder.pause(); // Pauses the program indefinitely
 liveCoder.pause(2000); // Pauses the program for 2 seconds
+```
+
+### Coder#resume
+
+*Syntax*
+
+```javascript
+public resume(): void
+```
+
+*Example*
+
+```javascript
+liveCoder.resume(); // Resumes the program
 ```
 
 ### Coder#getDeferredPromise
@@ -116,7 +132,7 @@ public loadStyle(url: string): void
 *Example*
 
 ```javascript
-liveCoder.loadStyle('http://www.example.com/styles.css');
+liveCoder.loadStyle('http://www.example.com/styles.css'); // Loads a stylesheet
 ```
 
 ### Coder#loadScript
@@ -130,6 +146,8 @@ public loadScript(url: string): Promise<any>
 *Example*
 
 ```javascript
+// Loads a Javascdript files returning a promise that
+// will be resolved once the script is loaded
 liveCoder.loadScript('http://www.example.com/script.js')
   .then(() => console.log('Script loaded.'));
 ```
