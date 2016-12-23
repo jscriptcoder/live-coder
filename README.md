@@ -1,10 +1,55 @@
 # Live Coder
-Amazing tool to simulate live coding Frontend technologies: *HTML, CSS and Javascript*. That means, You don't actually have to code yourself, just pass a program and **LiveCoder** will do the job for you. No more unexpecteds, typos, exceptions, etc... You prepare the program, making sure everything works fine, and your presentation is ready to go :-)
+Fun tool to simulate live coding Frontend technologies: *HTML, CSS and Javascript*. That means, You don't actually have to code yourself, just pass a program and **LiveCoder** will do the job for you. No more unexpecteds, typos, exceptions, etc... You prepare the program, making sure everything works fine, and your presentation is ready to go :-)
 
 ## Motivation
 I always found live coding a great way to present ideas. But we're human, and we make mistakes, above all when there are people watching us. It could be somewhat intimidating... At the same time, I always thought how cool would be if a program could implement other programs in real time :-P
 
 [See demo here](https://jscriptcoder.github.io/live-coder/)
+
+## How it works
+
+Write HTML, CSS and/or Javascript as a string in a variable or text file separating each technology using the following directives (starting always with three dashes **---**):
+
+**--- css**: will add the following css in a ```<style>``` element.
+
+**--- html**: will add the following html in the ```<default-container>``` element (see **CoderConfig** below).
+
+**--- js**: will add the following javascript code in a ```<script>``` element.
+
+**--- apply**: will append the last element being processed to the DOM, which will be parsed and executed.
+
+**--- promise(or await):_promiseVar_**: will pause LiveCoder until ```promiseVar``` is resolved (or rejected).
+
+### Passing parameters after colon (:)
+
+**--- css:_apply_**: will append the ```<style>``` element to the DOM right away, making the browser parse the styles as the css is written.
+
+**--- html:_apply_**: same effect, although it doesn't look too nice since you'll see angle brackes "<", "</" appearing and disappearing as the html is added.
+
+**--- html:_tag_**: will add the following html in the element ```<tag>```. If it doesn't exist in the DOM, it'll be created and added to the ```<default-container>``` element.
+
+**--- html:_tag#id_**: ```<tag id="id">```
+
+**--- html:_tag.class_**: ```<tag class="class">```
+
+**--- html:_#id_**: ```<div id="id">```
+
+**--- html:_.class_**: ```<tag class="class">```
+
+**--- html:tag.class:apply**: ```<tag class="class">``` with _apply_
+
+After an _apply_, if the following block is the same (css, html or js) as the previous one, you don't need to specify again the type of block. For example:
+```css
+--- css
+body { background-color: lightblue; }
+--- apply
+
+h1 { margin: 4px; }
+h2 { margin: 2px; }
+--- apply
+```
+
+Best is to have a look at the [example](https://github.com/jscriptcoder/live-coder/blob/master/test/example.txt) to better understand how it works.
 
 ## Download source
 ```shell
