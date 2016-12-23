@@ -84,8 +84,8 @@ var liveCoder = new Live.Coder({
 
 | Option            | Type     | Default                   | Description                                      |
 | ----------------- | -------- | ------------------------- | ------------------------------------------------ |
-| displayClass?     | string   | *'live-coder\_\_display'* | Class name used for the display element          |
-| defaultContainer? | string   | *'default-container'*     | Tag used as default container for other elements |
+| displayClass?     | string   | *"live-coder\_\_display"* | Class name used for the display element          |
+| defaultContainer? | string   | *"default-container"*     | Tag used as default container for other elements |
 | typingSpeed?      | number   | *50*                      | Milliseconds between characters                  |
 | pauseOnClick?     | boolean  | *true*                    | Pauses/resumes when clicking on the document     |
 | paused?           | boolean  | *false*                   | If true, the program is initially paused         |
