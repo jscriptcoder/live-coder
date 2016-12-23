@@ -10,6 +10,8 @@ body {
 	margin: 0;
 	padding: 0;
 	background: transparent url('static/bg-8-full.jpg');
+	background-size: cover;
+	overflow: hidden;
 }
 --- apply ---
 
@@ -90,6 +92,7 @@ displayBody.appendChild(lcDisplay);
 	border-top-left-radius: 6px;
 	border-top-right-radius: 6px;
 	box-shadow: 0px 0px 15px 1px rgba(0,0,0,0.75);
+	z-index: 1;
 }
 
 .display-header {
@@ -153,7 +156,7 @@ var wait5sec = new Promise(function (resolve) {
  * We can also pause liveCoder for an amount of time.
  * For this we need to have access to the instance
  */
-liveCoder.pause(5000);
+liveCoder.pause(2000);
 --- apply ---
 
 /**
@@ -223,7 +226,7 @@ liveCoder.setTypingSpeed(50);
 --- apply ---
 
 // Try now dragging the window grabbing title bar
-liveCoder.pause(5000);
+liveCoder.pause(3000);
 --- apply ---
 
 /**
@@ -262,3 +265,81 @@ maxButton.className += ' fa fa-square-o';
 	line-height: 16px;
 	color: #424242;
 }
+
+--- js ---
+/**
+ * What if we create two LiveCoders?, that would be
+ * an interesting experiement. Let's give it a try
+ */
+
+var spawn1 = new Live.Coder({
+	displayClass: 'spawn1__display',
+	typingSpeed: 20
+});
+
+var spawn2 = new Live.Coder({
+	displayClass: 'spawn2__display',
+	typingSpeed: 10
+});
+
+var spawn1Promise = fetch('test/spawn1.txt')
+	.then(function (response) { return response.text() })
+	.then(function (program) { return spawn1.run(program) });
+
+liveCoder.setTypingSpeed(10);
+--- apply ---
+
+--- css:apply ---
+.display-container { transition: all 0.3s ; }
+
+--- js ---
+var displayContainer = document.querySelector('.display-container');
+displayContainer.style.left = '650px';
+displayContainer.style.top = '60px';
+--- apply ---
+
+--- css:apply ---
+.display-container { transition: none; }
+
+--- js ---
+liveCoder.setTypingSpeed(50);
+--- apply ---
+
+// second LiveCoder
+var spawn2Promise = fetch('test/spawn2.txt')
+	.then(function (response) { return response.text() })
+	.then(function (program) { return spawn2.run(program) });
+--- apply ---
+
+var spawnsDone = Promise.all([spawn1Promise, spawn2Promise]);
+--- apply ---
+
+--- await:spawnsDone ---
+
+/**
+ * Alright, that was fun :-)
+ *
+ * I belive there is potential in this tool,
+ * but it's still early to say. Imagine a few
+ * instances building live an entire application.
+ * It would be for sure great to see each step
+ * of the process... Think about it. In the mean
+ * time, Good Bye
+ */
+liveCoder.setTypingSpeed(10);
+--- apply ---
+
+--- css ---
+@keyframes spinning-out {
+  0%   { transform: rotate(72deg);  width: 480px; height: 320px; }
+  25%  { transform: rotate(144deg); width: 360px; height: 240px; }
+  50%  { transform: rotate(216deg); width: 240px; height: 160px; }
+  75%  { transform: rotate(288deg); width: 120px; height: 80px;  }
+  100% { transform: rotate(360deg); width: 0px;   height: 0px;   }
+}
+
+.display-container {
+	overflow: hidden;
+	animation: spinning-out .5s linear forwards;
+}
+--- apply ---

@@ -1,0 +1,84 @@
+--- css:apply ---
+.spawn2__display {
+	background-color: rgba(255, 255, 255, 0.8);
+	color: black;
+	margin: 0;
+	padding: 4px;
+	overflow: auto;
+	width: 600px;
+	max-height: 200px;
+}
+
+--- html:div.spawn2-display-container ---
+<div class="spawn2-display-header">
+
+	<div class="spawn2-display-header__actions">
+		<div class="close"></div>
+		<div class="minimize"></div>
+		<div class="maximize"></div>
+	</div>
+
+	<div class="spawn2-display-header__title"></div>
+
+</div>
+<div class="spawn2-display-body"></div>
+--- apply ---
+
+--- js ---
+var s1Display = document.querySelector('.spawn2__display');
+var s1DisplayBody = document.querySelector('.spawn2-display-body');
+s1DisplayBody.appendChild(s1Display);
+--- apply ---
+
+--- css:apply ---
+.spawn2-display-container {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+	box-shadow: 0px 0px 15px 1px rgba(0,0,0,0.75);
+}
+
+.spawn2-display-header {
+	height: 30px;
+	background: linear-gradient(180deg, #666464 0%, #3D3B3B 100%);
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+	display: flex;
+	align-items: center;
+}
+
+--- html:div.spawn2-display-header__title:apply ---
+spawn2@jscriptcoder
+
+--- css:apply ---
+.spawn2-display-header__title {
+	color: white;
+	font-family: monospace;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.spawn2-display-header__actions {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0 8px;
+}
+
+.spawn2-display-header__actions > div {
+	width: 16px;
+	height: 16px;
+	background: linear-gradient(180deg, #9E9E9E 0%, #5a5a5a 100%);
+	border-radius: 8px;
+	margin: 0 2px;
+	font-size: 10px;
+	text-align: center;
+	line-height: 16px;
+	color: #424242;
+}
+
+.spawn2-display-header__actions .close {
+	background: linear-gradient(180deg, #f78867 0%, #b72b00 100%);
+}

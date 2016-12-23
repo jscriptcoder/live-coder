@@ -44,6 +44,10 @@ export function asyncForOf<T>(fn: {(value: T): AnyPromise}, array: T[], delay?: 
 
 export function waitForDom(): AnyPromise {
   return new Promise<any>((resolve: Function) => {
-    document.addEventListener('DOMContentLoaded', () => resolve() );
+    if (/comp|inter|loaded/.test(document.readyState)){
+      resolve();
+    } else {
+      document.addEventListener('DOMContentLoaded', () => resolve() );
+    }
   });
 }

@@ -1,0 +1,79 @@
+--- css:apply ---
+.spawn1__display {
+	background-color: rgba(0, 0, 0, 0.8);
+	color: white;
+	margin: 0;
+	padding: 4px;
+	overflow: auto;
+	width: 600px;
+	max-height: 200px;
+}
+
+--- html:div.spawn1-display-container ---
+<div class="spawn1-display-header">
+
+	<div class="spawn1-display-header__actions">
+		<div class="close"></div>
+		<div class="minimize"></div>
+		<div class="maximize"></div>
+	</div>
+
+	<div class="spawn1-display-header__title"></div>
+
+</div>
+<div class="spawn1-display-body"></div>
+--- apply ---
+
+--- js ---
+var s1Display = document.querySelector('.spawn1__display');
+var s1DisplayBody = document.querySelector('.spawn1-display-body');
+s1DisplayBody.appendChild(s1Display);
+--- apply ---
+
+--- css:apply ---
+.spawn1-display-container {
+	position: absolute;
+	top: 300px;
+	left: 20px;
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+	box-shadow: 0px 0px 15px 1px rgba(0,0,0,0.75);
+}
+
+.spawn1-display-header {
+	height: 30px;
+	background-color: white;
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+	display: flex;
+	align-items: center;
+}
+
+--- html:div.spawn1-display-header__title:apply ---
+spawn1@jscriptcoder
+
+--- css:apply ---
+.spawn1-display-header__title {
+	color: black;
+	font-family: monospace;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.spawn1-display-header__actions {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0 8px;
+}
+
+.spawn1-display-header__actions > div {
+	width: 16px;
+	height: 16px;
+	border-radius: 8px;
+	margin: 0 2px;
+}
+
+.spawn1-display-header__actions .close { background-color: #df6961; }
+.spawn1-display-header__actions .minimize { background-color: #f2bc57; }
+.spawn1-display-header__actions .maximize { background-color: #6bb358; }
