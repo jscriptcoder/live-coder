@@ -225,7 +225,7 @@ liveCoder.setTypingSpeed(10);
 liveCoder.setTypingSpeed(50);
 --- apply ---
 
-// Try now dragging the window grabbing title bar
+// Try now dragging the window grabbing the title bar
 liveCoder.pause(3000);
 --- apply ---
 
@@ -241,6 +241,12 @@ var scriptLoaded = new Promise(function (resolve) {
 
 scriptFontAwesome.src = 'https://use.fontawesome.com/0add3451c0.js';
 head.appendChild(scriptFontAwesome);
+
+/**
+ * This could've been done easily with just one line:
+ * var scriptLoaded = liveCoder.loadScript(fontawesome_url);
+ */
+
 --- apply ---
 
 --- await:scriptLoaded ---
