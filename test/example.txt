@@ -322,7 +322,7 @@ var spawnsDone = Promise.all([spawn1Promise, spawn2Promise]);
  * I belive there is potential in this tool,
  * but it's still early to say. Imagine a few
  * instances building live an entire application.
- * It would be for sure great to see each step
+ * It would, for sure, be great to see each step
  * of the process... Think about it. In the mean
  * time, Good Bye
  */
@@ -340,6 +340,7 @@ liveCoder.setTypingSpeed(10);
 
 .display-container {
 	overflow: hidden;
+	transform-origin: 50% 50%;
 	animation: spinning-out .5s linear forwards;
 }
 --- apply ---

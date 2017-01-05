@@ -7,6 +7,10 @@ import {
 
 export interface CoderConfig {
   displayClass?: string;
+  dirClass?: string;
+  htmlClass?: string;
+  cssClass?: string;
+  jsClass?: string;
   defaultContainer?: string;
   typingSpeed?: number;
   pauseOnClick?: boolean;
@@ -20,6 +24,10 @@ export class Coder {
 
   private static DEFAULT_CONFIG: CoderConfig = {
     displayClass: 'live-coder__display',
+    dirClass: 'directive',
+    htmlClass: 'html',
+    cssClass: 'css',
+    jsClass: 'javascript',
     defaultContainer: 'default-container',
     typingSpeed: 50,
     pauseOnClick: true,
@@ -70,7 +78,7 @@ export class Coder {
       this.$runner = document.getElementsByTagName('head')[0] || document.body;
       this.$defContainer = this.createElement(this.config.defaultContainer);
       this.$body = document.body;
-      this.$display = this.createDisplay();
+      this.$display = this.getDisplay();
 
       if (this.config.pauseOnClick) {
         this.togglePauseListener = this.togglePause.bind(this);
@@ -83,6 +91,10 @@ export class Coder {
         this.resume();
       }
     });
+  }
+
+  private evalElement($elem: HTMLElement): void {
+    this.$runner.appendChild($elem);
   }
 
   private togglePause(): void {
@@ -106,6 +118,10 @@ export class Coder {
     return $elem;
   }
 
+  private getDisplay(): HTMLElement {
+    return <HTMLElement>document.querySelector(`.${this.config.displayClass}`) || this.createDisplay();
+  }
+
   private createDisplay(): HTMLElement {
     return this.createElement('pre', { className: this.config.displayClass }, document.body);
   }
@@ -118,6 +134,14 @@ export class Coder {
     return <HTMLScriptElement>this.createElement('script', { type: 'text/javascript' });
   }
 
+  private createDirective(): HTMLElement {
+    return <HTMLElement>this.createElement('code', { className: this.config.dirClass });
+  }
+
+  private createCode(className: string): HTMLElement {
+    return <HTMLElement>this.createElement('code', { className });
+  }
+
   private createStylesheetLink(): HTMLLinkElement {
     return <HTMLLinkElement>this.createElement('link', {
       rel: 'stylesheet',
@@ -125,8 +149,12 @@ export class Coder {
     });
   }
 
-  private writeAndScrollDisplay(char: string): void {
-    this.$display.textContent += char;
+  private writeAndScroll(char: string, $elem: HTMLElement): void {
+    if (!Coder.isElementAttached($elem)) {
+      this.$display.appendChild($elem);
+    }
+
+    $elem.textContent += char;
     this.$display.scrollTop = this.$display.scrollHeight;
   }
 
@@ -140,10 +168,12 @@ export class Coder {
 
       const lines = code.trim().split('\n');
 
-      let $style: HTMLElement;
+      let $style: HTMLStyleElement;
       let $element: HTMLElement;
       let elemInnerHtml: string;
-      let $script: HTMLElement;
+      let $script: HTMLScriptElement;
+      let $directive: HTMLElement;
+      let $code: HTMLElement;
 
       return asyncForOf((line: string) => {
 
@@ -158,14 +188,17 @@ export class Coder {
 
         if (matchDir) {
 
+          // we're gonna write a directive on the display
+          $directive = this.createDirective();
+
           forOfPromise = asyncForOf((char: string) => {
 
-            this.writeAndScrollDisplay(char);
+            this.writeAndScroll(char, $directive);
             return this.continue(returnPromise);
 
           }, chars, this.config.typingSpeed).then(() => {
 
-            this.$display.textContent += '\n';
+            this.$display.innerHTML += '\n';
 
             const [directive, ...rest] = matchDir[1].split(':');
 
@@ -181,6 +214,7 @@ export class Coder {
                 elemInnerHtml = '';
 
                 $style = this.createStyle();
+                $code = this.createCode(this.config.cssClass);
 
                 Coder.appendIfApply(rest[0], $style, this.$runner);
 
@@ -195,6 +229,7 @@ export class Coder {
                 elemInnerHtml = '';
 
                 $script = this.createScript();
+                $code = this.createCode(this.config.jsClass);
 
                 // can't be apply at this point, only at the end,
                 // would throw exeptions
@@ -280,6 +315,7 @@ export class Coder {
                 }
 
                 $element = $element || this.$defContainer;
+                $code = this.createCode(this.config.htmlClass);
 
                 // in case there was already content
                 // we can continue writing html in the element
@@ -292,17 +328,20 @@ export class Coder {
 
                 if ($style && !Coder.isElementAttached($style)) {
 
-                  this.$runner.appendChild($style);
+                  this.evalElement($style);
                   $style = this.createStyle();
+                  $code = this.createCode(this.config.cssClass);
 
                 } else if ($element && !Coder.isElementAttached($element)) {
 
                   this.$body.appendChild($element);
+                  $code = this.createCode(this.config.htmlClass);
 
                 } else if ($script && !Coder.isElementAttached($script)) {
 
-                  this.$runner.appendChild($script);
+                  this.evalElement($script);
                   $script = this.createScript();
+                  $code = this.createCode(this.config.jsClass);
 
                 }
 
@@ -328,7 +367,7 @@ export class Coder {
 
           forOfPromise = asyncForOf((char: string) => {
 
-            this.writeAndScrollDisplay(char);
+            this.writeAndScroll(char, $code);
 
             if ($style) {
               $style.textContent += char;
@@ -350,13 +389,14 @@ export class Coder {
 
           }, chars, this.config.typingSpeed).then(() => {
 
-            this.writeAndScrollDisplay('\n');
+            this.writeAndScroll('\n', $code);
 
             if ($style) {
               $style.textContent += '\n';
             } else if ($script) {
               $script.textContent += '\n';
             }
+            // we don't care about line breaks in the html element
 
             return this.continue(returnPromise);
 
@@ -372,6 +412,8 @@ export class Coder {
         $element = null;
         elemInnerHtml = '';
         $script = null;
+        $directive = null;
+        $code = null;
 
         return Promise.resolve();
 
@@ -406,7 +448,7 @@ export class Coder {
   public loadStyle(url: string): void {
     const link = this.createStylesheetLink();
     link.href = url;
-    this.$runner.appendChild(link);
+    this.evalElement(link);
   }
 
   public loadScript(url: string): AnyPromise {
@@ -415,7 +457,7 @@ export class Coder {
 
     script.onload = deferred.resolve;
     script.src = url;
-    this.$runner.appendChild(script);
+    this.evalElement(script);
 
     return deferred.promise;
   }
