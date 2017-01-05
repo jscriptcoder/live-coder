@@ -8,35 +8,35 @@ I always found live coding a great way to present ideas. But we're human, and we
 
 ## How it works
 
-Write HTML, CSS and/or Javascript as a string in a variable or text file separating each technology using the following directives (starting always with three dashes **---**):
+Write HTML, CSS and/or Javascript as a string in a variable or text file separating each technology using the following directives (starting always with three dashes `---`):
 
-**--- css**: will add the following css in a ```<style>``` element.
+**--- css**: will add the following css in a `<style>` element.
 
-**--- html**: will add the following html in the ```<default-container>``` element (see **CoderConfig** below).
+**--- html**: will add the following html in the `<default-container>` element (see **CoderConfig** below).
 
-**--- js**: will add the following javascript code in a ```<script>``` element.
+**--- js**: will add the following javascript code in a `<script>` element.
 
 **--- apply**: will append the last element being processed to the DOM, which will be parsed and executed.
 
-**--- promise(or await):_promiseVar_**: will pause LiveCoder until ```promiseVar``` is resolved (or rejected).
+**--- promise(or await):_promiseVar_**: will pause LiveCoder until `promiseVar` is resolved (or rejected).
 
 ### Passing parameters after colon (:)
 
-**--- css:_apply_**: will append the ```<style>``` element to the DOM right away, making the browser parse the styles as the css is written.
+**--- css:_apply_**: will append the `<style>` element to the DOM right away, making the browser parse the styles as the css is written.
 
 **--- html:_apply_**: same effect, although it doesn't look too nice since you'll see angle brackes "<", "</" appearing and disappearing as the html is added.
 
-**--- html:_tag_**: will add the following html in the element ```<tag>```. If it doesn't exist in the DOM, it'll be created and added to the ```<default-container>``` element.
+**--- html:_tag_**: will add the following html in the element `<tag>`. If it doesn't exist in the DOM, it'll be created and added to the `<default-container>` element.
 
-**--- html:_tag#id_**: ```<tag id="id">```
+**--- html:_tag#id_**: `<tag id="id">`
 
-**--- html:_tag.class_**: ```<tag class="class">```
+**--- html:_tag.class_**: `<tag class="class">`
 
-**--- html:_#id_**: ```<div id="id">```
+**--- html:_#id_**: `<div id="id">`
 
-**--- html:_.class_**: ```<tag class="class">```
+**--- html:_.class_**: `<tag class="class">`
 
-**--- html:tag.class:apply**: ```<tag class="class">``` with _apply_
+**--- html:tag.class:apply**: `<tag class="class">` with _apply_
 
 After an _apply_, if the following block is the same (css, html or js) as the previous one, you don't need to specify again the type of block. For example:
 ```css
@@ -84,11 +84,12 @@ var liveCoder = new Live.Coder({
 
 | Option            | Type     | Default                   | Description                                      |
 | ----------------- | -------- | ------------------------- | ------------------------------------------------ |
-| displayClass?     | string   | *'live-coder\_\_display'* | Class name used for the display element          |
-| defaultContainer? | string   | *'default-container'*     | Tag used as default container for other elements |
+| displayClass?     | string   | *"live-coder\_\_display"* | Class name used for the display element          |
+| defaultContainer? | string   | *"default-container"*     | Tag used as default container for other elements |
 | typingSpeed?      | number   | *50*                      | Milliseconds between characters                  |
 | pauseOnClick?     | boolean  | *true*                    | Pauses/resumes when clicking on the document     |
 | paused?           | boolean  | *false*                   | If true, the program is initially paused         |
+> ? optional
 
 ### Coder#run
 

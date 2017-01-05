@@ -319,7 +319,7 @@ var spawnsDone = Promise.all([spawn1Promise, spawn2Promise]);
 /**
  * Alright, that was fun :-)
  *
- * I belive there is potential in this tool,
+ * I believe there is potential in this tool,
  * but it's still early to say. Imagine a few
  * instances building live an entire application.
  * It would, for sure, be great to see each step
