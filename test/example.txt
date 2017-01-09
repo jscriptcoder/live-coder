@@ -47,7 +47,7 @@ body {
  * import the library...
  */
 
-var highlighCDN = 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/';
+var highlighCDN = '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/';
 var head = document.getElementsByTagName('head')[0];
 var scriptHighlight = document.createElement('script');
 var scriptLoaded = new Promise(function (resolve) {
@@ -274,7 +274,7 @@ liveCoder.pause(3000);
  * for the actions buttons. Let's use FontAwesome
  */
 
-var fontawesomeURL = 'https://use.fontawesome.com/0add3451c0.js';
+var fontawesomeURL = '//use.fontawesome.com/0add3451c0.js';
 var scriptLoaded = liveCoder.loadScript(fontawesomeURL);
 --- apply ---
 
