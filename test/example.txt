@@ -42,6 +42,46 @@ body {
 
 --- js ---
 /**
+ * Code without syntax highlighting is not code.
+ * Let's use highlight.js, but first we need to
+ * import the library...
+ */
+
+var highlighCDN = 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/';
+var head = document.getElementsByTagName('head')[0];
+var scriptHighlight = document.createElement('script');
+var scriptLoaded = new Promise(function (resolve) {
+	scriptHighlight.onload = resolve;
+});
+
+scriptHighlight.src = highlighCDN + 'highlight.min.js';
+head.appendChild(scriptHighlight);
+
+/**
+ * This could've been done easily with just one line:
+ * var scriptLoaded = liveCoder.loadScript(highlightURL);
+ */
+
+liveCoder.loadStyle(highlighCDN + 'styles/monokai-sublime.min.css');
+--- apply ---
+
+--- promise:scriptLoaded ---
+
+/**
+ * Next we change the way we display the code,
+ * highlighting it using the library
+ */
+
+liveCoder.setWriteChar(function (char, $code) {
+  if ($code.className !== 'directive') {
+    $code.innerHTML = hljs.highlight($code.className, $code.textContent + char, true).value;
+  } else {
+  	$code.innerHTML = '<strong>' + ($code.textContent + char) + '</strong>'
+  }
+});
+--- apply ---
+
+/**
  * Let's build the markup for the window, which will
  * contain the display also... but first we speed up
  * a bit the coding ;-)
@@ -233,20 +273,9 @@ liveCoder.pause(3000);
  * Ooops!, we forgot something. We forgot the icons
  * for the actions buttons. Let's use FontAwesome
  */
-var head = document.getElementsByTagName('head')[0];
-var scriptFontAwesome = document.createElement('script');
-var scriptLoaded = new Promise(function (resolve) {
-	scriptFontAwesome.onload = resolve;
-})
 
-scriptFontAwesome.src = 'https://use.fontawesome.com/0add3451c0.js';
-head.appendChild(scriptFontAwesome);
-
-/**
- * This could've been done easily with just one line:
- * var scriptLoaded = liveCoder.loadScript(fontawesome_url);
- */
-
+var fontawesomeURL = 'https://use.fontawesome.com/0add3451c0.js';
+var scriptLoaded = liveCoder.loadScript(fontawesomeURL);
 --- apply ---
 
 --- await:scriptLoaded ---

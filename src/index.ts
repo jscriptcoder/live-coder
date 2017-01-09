@@ -15,6 +15,7 @@ export interface CoderConfig {
   typingSpeed?: number;
   pauseOnClick?: boolean;
   paused?: boolean;
+  writeChar?: {(char: string, $code: HTMLElement): void}
 }
 
 export class Coder {
@@ -31,7 +32,10 @@ export class Coder {
     defaultContainer: 'default-container',
     typingSpeed: 50,
     pauseOnClick: true,
-    paused: false
+    paused: false,
+    writeChar(char: string, $code: HTMLElement) {
+      $code.textContent += char;
+    }
   };
 
   private static isElementAttached($elem: HTMLElement): boolean {
@@ -149,12 +153,18 @@ export class Coder {
     });
   }
 
-  private writeAndScroll(char: string, $elem: HTMLElement): void {
-    if (!Coder.isElementAttached($elem)) {
-      this.$display.appendChild($elem);
+  private writeAndScroll(char: string, $code: HTMLElement): void {
+    if (!Coder.isElementAttached($code)) {
+      this.$display.appendChild($code);
     }
 
-    $elem.textContent += char;
+    if (typeof this.config.writeChar === 'function') {
+      this.config.writeChar(char, $code);  
+    } else {
+      $code.textContent += char;
+    }
+    
+    
     this.$display.scrollTop = this.$display.scrollHeight;
   }
 
@@ -425,6 +435,10 @@ export class Coder {
 
   public setTypingSpeed(typingSpeed: number): void {
     this.config.typingSpeed = typingSpeed;
+  }
+
+  public setWriteChar(writeChar: {(char: string, $code: HTMLElement): void}): void {
+    this.config.writeChar = writeChar;
   }
 
   public pause(timeout?: number): void {
