@@ -89,6 +89,7 @@ var liveCoder = new Live.Coder({
 | typingSpeed?      | number   | *50*                      | Milliseconds between characters                  |
 | pauseOnClick?     | boolean  | *true*                    | Pauses/resumes when clicking on the document     |
 | paused?           | boolean  | *false*                   | If true, the program is initially paused         |
+| writeChar?        | Function | TODO                      | Allows you to set your own code writer           |
 > ? optional
 
 ### Coder#run
@@ -120,6 +121,24 @@ public setTypingSpeed(typingSpeed: number): void
 
 ```javascript
 liveCoder.setTypingSpeed(10); // Changes the typing speed
+```
+
+### Coder#setWriteChar
+
+*Syntax*
+
+```javascript
+public setWriteChar(writeChar: {(char: string, $code: HTMLElement): void}): void
+```
+
+*Example*
+
+```javascript
+// You can pass your custom code-writer
+// For example, you might want syntax highlighting
+liveCoder.setWriteChar(function (char, $code) {
+  $code.innerHTML = highlight($code.textContent + char);
+});
 ```
 
 ### Coder#pause
