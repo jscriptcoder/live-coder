@@ -89,7 +89,7 @@ var liveCoder = new Live.Coder({
 | typingSpeed?      | number   | *50*                      | Milliseconds between characters                  |
 | pauseOnClick?     | boolean  | *true*                    | Pauses/resumes when clicking on the document     |
 | paused?           | boolean  | *false*                   | If true, the program is initially paused         |
-| writeChar?        | Function | TODO                      | Allows you to set your own code writer           |
+| writeChar?        | Function | *[See here](https://github.com/jscriptcoder/live-coder/blob/master/src/index.ts#L36)* | Allows you to set your own code writer (e.g Syntax highlight) |
 > ? optional
 
 ### Coder#run
