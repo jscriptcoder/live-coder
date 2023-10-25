@@ -230,3 +230,5 @@ public destroy(): void
 ```javascript
 liveCoder.destroy(); // Frees resources
 ```
+
+<!-- sort 1 -->
